@@ -31,6 +31,7 @@ object AppUpdateChecker {
     private const val CURRENT_VERSION_NAME = "1.0.5"
 
     private var pendingInstallFile: File? = null
+    private var userRedirectedToSettings: Boolean = false
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -72,6 +73,12 @@ object AppUpdateChecker {
             }
 
             val hasUpdate = isVersionNewer(tagName, CURRENT_VERSION_NAME)
+
+            // 🧹 Если обновления нет или текущая версия актуальна — очищаем старый файл обновления в кэше
+            if (!hasUpdate) {
+                clearCachedApk()
+            }
+
             Result.success(
                 AppUpdateInfo(
                     latestVersion = tagName,
@@ -170,6 +177,7 @@ object AppUpdateChecker {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
                 AsyncLogger.log(LogLevel.INFO, "Запрос разрешения на установку из неизвестных источников")
+                userRedirectedToSettings = true
                 val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                     data = Uri.parse("package:${context.packageName}")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -189,6 +197,7 @@ object AppUpdateChecker {
             }
             context.startActivity(intent)
             pendingInstallFile = null
+            userRedirectedToSettings = false
         } catch (e: Exception) {
             AsyncLogger.log(LogLevel.ERROR, "Не удалось запустить установщик APK: ${e.message}")
         }
@@ -196,6 +205,10 @@ object AppUpdateChecker {
 
     fun checkAndResumePendingInstall(context: Context) {
         try {
+            // 🛑 Возобновляем установку ТОЛЬКО если пользователь был явно перенаправлен в Настройки
+            if (!userRedirectedToSettings) return
+            userRedirectedToSettings = false
+
             val file = pendingInstallFile ?: File(context.cacheDir, "videx_update.apk")
             if (file.exists() && file.length() > 5 * 1024 * 1024L) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.canRequestPackageInstalls()) {
@@ -206,5 +219,16 @@ object AppUpdateChecker {
         } catch (e: Exception) {
             AsyncLogger.log(LogLevel.ERROR, "Ошибка возобновления установки APK: ${e.message}")
         }
+    }
+
+    fun clearCachedApk(context: Context? = null) {
+        try {
+            pendingInstallFile = null
+            userRedirectedToSettings = false
+            if (context != null) {
+                val file = File(context.cacheDir, "videx_update.apk")
+                if (file.exists()) file.delete()
+            }
+        } catch (_: Exception) {}
     }
 }

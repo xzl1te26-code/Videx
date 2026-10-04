@@ -3,6 +3,8 @@ package com.example.videodownloader.logic
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.example.videodownloader.AsyncLogger
 import com.example.videodownloader.LogLevel
@@ -51,7 +53,8 @@ object AppUpdateChecker {
 
             val jsonObject = JSONObject(jsonData)
             val tagName = jsonObject.optString("tag_name", "").removePrefix("v").trim()
-            val releaseNotes = jsonObject.optString("body", "")
+            val rawReleaseNotes = jsonObject.optString("body", "")
+            val cleanNotes = cleanMarkdownText(rawReleaseNotes)
 
             var downloadUrl = ""
             val assets = jsonObject.optJSONArray("assets")
@@ -70,7 +73,7 @@ object AppUpdateChecker {
             Result.success(
                 AppUpdateInfo(
                     latestVersion = tagName,
-                    releaseNotes = releaseNotes,
+                    releaseNotes = cleanNotes,
                     downloadUrl = downloadUrl,
                     hasUpdate = hasUpdate
                 )
@@ -79,6 +82,16 @@ object AppUpdateChecker {
             AsyncLogger.log(LogLevel.ERROR, "AppUpdateChecker error: ${e.message}")
             Result.failure(e)
         }
+    }
+
+    private fun cleanMarkdownText(raw: String): String {
+        return raw
+            .replace("```markdown", "")
+            .replace("```", "")
+            .replace(Regex("""\*\*(.*?)\*\*"""), "$1")
+            .replace(Regex("""\*(.*?)\*"""), "$1")
+            .replace(Regex("""#(.*?)\n"""), "$1\n")
+            .trim()
     }
 
     private fun isVersionNewer(latest: String, current: String): Boolean {
@@ -136,6 +149,16 @@ object AppUpdateChecker {
 
     fun promptInstallApk(context: Context, apkFile: File) {
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
+                AsyncLogger.log(LogLevel.INFO, "Запрос разрешения на установку из неизвестных источников")
+                val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(settingsIntent)
+                return
+            }
+
             val contentUri: Uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",

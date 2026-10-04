@@ -94,6 +94,15 @@
 
 ---
 
+## Партнёр проекта
+
+Приложение **Videx** создано при поддержке команды **ProxyGuide Team** — экспертов в области приватности и безопасности.
+
+- **Сообщество ProxyGuide**: [@ProxyGuide_Community](https://t.me/ProxyGuide_Community)
+- **Telegram-бот**: [@ProxyGuidebot](https://t.me/ProxyGuidebot)
+
+---
+
 ## Сообщество и Поддержка
 
 - **Telegram-канал**: [@videx_app](https://t.me/videx_app)

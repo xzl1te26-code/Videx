@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="history"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_history"
+        android:shortcutShortLabel="@string/shortcut_history_short"
+        android:shortcutLongLabel="@string/shortcut_history_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.example.videodownloader"
+            android:targetClass="com.example.videodownloader.MainActivity">
+            <extra android:name="navigate_to" android:value="history" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="paste"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_paste"
+        android:shortcutShortLabel="@string/shortcut_paste_short"
+        android:shortcutLongLabel="@string/shortcut_paste_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.example.videodownloader"
+            android:targetClass="com.example.videodownloader.MainActivity">
+            <extra android:name="action" android:value="paste_link" />
+        </intent>
+    </shortcut>
+</shortcuts>

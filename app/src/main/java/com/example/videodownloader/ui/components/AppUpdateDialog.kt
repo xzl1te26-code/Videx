@@ -250,7 +250,8 @@ fun AppUpdateDialog(
                                 coroutineScope.launch {
                                     val res = AppUpdateChecker.downloadAndInstallApk(
                                         context,
-                                        updateInfo.downloadUrl
+                                        updateInfo.downloadUrl,
+                                        updateInfo.latestVersion
                                     ) { prog -> downloadProgress = prog }
 
                                     if (res.isSuccess) {

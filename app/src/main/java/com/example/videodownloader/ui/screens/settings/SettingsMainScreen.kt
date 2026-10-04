@@ -360,7 +360,7 @@ fun AppUpdateRow(snackbarHostState: SnackbarHostState) {
                 if (!isChecking) {
                     isChecking = true
                     coroutineScope.launch {
-                        val result = com.example.videodownloader.logic.AppUpdateChecker.checkForUpdates()
+                        val result = com.example.videodownloader.logic.AppUpdateChecker.checkForUpdates(context)
                         isChecking = false
                         if (result.isSuccess) {
                             val info = result.getOrThrow()

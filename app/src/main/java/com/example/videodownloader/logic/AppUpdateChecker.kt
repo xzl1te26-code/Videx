@@ -28,7 +28,6 @@ object AppUpdateChecker {
 
     private const val GITHUB_OWNER = "xzl1te26-code"
     private const val GITHUB_REPO = "Videx"
-    private const val CURRENT_VERSION_NAME = "1.0.6"
 
     private var pendingInstallFile: File? = null
     private var userRedirectedToSettings: Boolean = false
@@ -38,7 +37,15 @@ object AppUpdateChecker {
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    suspend fun checkForUpdates(): Result<AppUpdateInfo> = withContext(Dispatchers.IO) {
+    fun getInstalledVersionName(context: Context): String {
+        return try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+        } catch (_: Exception) {
+            "1.0.0"
+        }
+    }
+
+    suspend fun checkForUpdates(context: Context): Result<AppUpdateInfo> = withContext(Dispatchers.IO) {
         try {
             val url = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
             val request = Request.Builder()
@@ -72,11 +79,12 @@ object AppUpdateChecker {
                 }
             }
 
-            val hasUpdate = isVersionNewer(tagName, CURRENT_VERSION_NAME)
+            val installedVersion = getInstalledVersionName(context)
+            val hasUpdate = isVersionNewer(tagName, installedVersion)
 
-            // 🧹 Если обновления нет или текущая версия актуальна — очищаем старый файл обновления в кэше
+            // Если обновления нет — очищаем устаревшие скачанные APK из кэша
             if (!hasUpdate) {
-                clearCachedApk()
+                clearOldCachedApks(context)
             }
 
             Result.success(
@@ -121,15 +129,17 @@ object AppUpdateChecker {
     suspend fun downloadAndInstallApk(
         context: Context,
         apkUrl: String,
+        latestVersion: String,
         forceRedownload: Boolean = false,
         onProgress: (Float) -> Unit
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
-            val apkFile = File(context.cacheDir, "videx_update.apk")
+            val safeVersion = latestVersion.ifBlank { "latest" }
+            val apkFile = File(context.cacheDir, "videx_update_$safeVersion.apk")
 
-            // Использование ранее скачанного файла при наличии в кэше
-            if (!forceRedownload && apkFile.exists() && apkFile.length() > 5 * 1024 * 1024L) {
-                AsyncLogger.log(LogLevel.INFO, "Используем ранее скачанный файл APK (${apkFile.length() / (1024 * 1024)} МБ)")
+            // Если версия совпадает и файл уже скачан (> 1 МБ) — берем готовый из кэша
+            if (!forceRedownload && apkFile.exists() && apkFile.length() > 1024 * 1024L) {
+                AsyncLogger.log(LogLevel.INFO, "Используем готовый APK из кэша: ${apkFile.name} (${apkFile.length() / (1024 * 1024)} МБ)")
                 onProgress(1.0f)
                 pendingInstallFile = apkFile
                 return@withContext Result.success(apkFile)
@@ -176,7 +186,7 @@ object AppUpdateChecker {
             pendingInstallFile = apkFile
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
-                AsyncLogger.log(LogLevel.INFO, "Запрос разрешения на установку из неизвестных источников")
+                AsyncLogger.log(LogLevel.INFO, "Перенаправление в Настройки за разрешением установки неизвестных приложений")
                 userRedirectedToSettings = true
                 val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                     data = Uri.parse("package:${context.packageName}")
@@ -205,14 +215,14 @@ object AppUpdateChecker {
 
     fun checkAndResumePendingInstall(context: Context) {
         try {
-            // 🛑 Возобновляем установку ТОЛЬКО если пользователь был явно перенаправлен в Настройки
+            // Возобновляем установку ТОЛЬКО если был явный редирект в Настройки во время этого сеанса
             if (!userRedirectedToSettings) return
             userRedirectedToSettings = false
 
-            val file = pendingInstallFile ?: File(context.cacheDir, "videx_update.apk")
-            if (file.exists() && file.length() > 5 * 1024 * 1024L) {
+            val file = pendingInstallFile ?: return
+            if (file.exists() && file.length() > 1024 * 1024L) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.canRequestPackageInstalls()) {
-                    AsyncLogger.log(LogLevel.INFO, "Автоматическое возобновление установки APK после получения прав")
+                    AsyncLogger.log(LogLevel.INFO, "Автоматический запуск установки APK после получения прав")
                     promptInstallApk(context, file)
                 }
             }
@@ -221,13 +231,14 @@ object AppUpdateChecker {
         }
     }
 
-    fun clearCachedApk(context: Context? = null) {
+    fun clearOldCachedApks(context: Context) {
         try {
             pendingInstallFile = null
             userRedirectedToSettings = false
-            if (context != null) {
-                val file = File(context.cacheDir, "videx_update.apk")
-                if (file.exists()) file.delete()
+            context.cacheDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith("videx_update") && file.name.endsWith(".apk")) {
+                    file.delete()
+                }
             }
         } catch (_: Exception) {}
     }

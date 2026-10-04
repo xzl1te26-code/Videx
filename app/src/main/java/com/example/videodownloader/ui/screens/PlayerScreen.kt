@@ -1,6 +1,7 @@
 package com.example.videodownloader.ui.screens
 
 import android.content.Context
+import androidx.compose.ui.draw.scale
 import com.example.videodownloader.performAppHaptic
 import com.example.videodownloader.HapticType
 import android.media.AudioManager
@@ -259,6 +260,8 @@ fun PlayerScreen(
 
     // Seek animation state
     var seekAction by remember { mutableStateOf<SeekAction?>(null) }
+    var seekSeconds by remember { mutableIntStateOf(10) }
+    var seekPulseTrigger by remember { mutableIntStateOf(0) }
 
     // Gesture & Seek Timer management
     var gestureJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
@@ -435,18 +438,29 @@ fun PlayerScreen(
                         resetControlsTimer()
                         view.performAppHaptic(HapticType.PLAYER_GESTURE)
                         val isRight = offset.x > size.width / 2
-                        val seekTime = 10000L
-                        if (isRight) {
-                            exoPlayer.seekTo(exoPlayer.currentPosition + seekTime)
-                            seekAction = SeekAction.Forward
+                        val currentDirection = if (isRight) SeekAction.Forward else SeekAction.Backward
+
+                        if (seekAction == currentDirection) {
+                            seekSeconds += 10
                         } else {
-                            exoPlayer.seekTo(exoPlayer.currentPosition - seekTime)
-                            seekAction = SeekAction.Backward
+                            seekSeconds = 10
                         }
+
+                        val seekMs = 10000L
+                        if (isRight) {
+                            exoPlayer.seekTo(exoPlayer.currentPosition + seekMs)
+                        } else {
+                            exoPlayer.seekTo(exoPlayer.currentPosition - seekMs)
+                        }
+
+                        seekAction = currentDirection
+                        seekPulseTrigger++
+
                         seekJob?.cancel()
                         seekJob = coroutineScope.launch {
-                            delay(650.milliseconds)
+                            delay(800.milliseconds)
                             seekAction = null
+                            seekSeconds = 10
                         }
                     }
                 )
@@ -809,34 +823,90 @@ fun PlayerScreen(
             ) {
                 GestureIndicator(type = gestureType, value = gestureValue)
             }
-            SeekVisualFeedback(seekAction = seekAction, isLandscape = isLandscape)
+            SeekVisualFeedback(
+                seekAction = seekAction,
+                seekSeconds = seekSeconds,
+                seekPulseTrigger = seekPulseTrigger,
+                isLandscape = isLandscape
+            )
         }
     }
 }
 
 @Composable
-private fun SeekVisualFeedback(seekAction: SeekAction?, isLandscape: Boolean) {
+private fun SeekVisualFeedback(
+    seekAction: SeekAction?,
+    seekSeconds: Int,
+    seekPulseTrigger: Int,
+    isLandscape: Boolean
+) {
+    // 🧠 ЗАПОМИНАЕМ ПОСЛЕДНЕЕ НЕ-NULL НАПРАВЛЕНИЕ, чтобы во время exit-анимации плашка не перескакивала на противоположную сторону!
+    var lastActiveAction by remember { mutableStateOf<SeekAction?>(null) }
+    if (seekAction != null) {
+        lastActiveAction = seekAction
+    }
+
+    val activeAction = seekAction ?: lastActiveAction ?: SeekAction.Forward
+    val alignment = if (activeAction == SeekAction.Forward) Alignment.CenterEnd else Alignment.CenterStart
+
+    var localPulse by remember { mutableIntStateOf(0) }
+    val pulseScale by animateFloatAsState(
+        targetValue = if (localPulse > 0) 1.25f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+        label = "seekPulseScale"
+    )
+
+    LaunchedEffect(seekPulseTrigger) {
+        if (seekPulseTrigger > 0) {
+            localPulse = seekPulseTrigger
+            delay(120.milliseconds)
+            localPulse = 0
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = seekAction != null,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
-            modifier = Modifier.align(
-                if (seekAction == SeekAction.Forward) Alignment.CenterEnd else Alignment.CenterStart
-            ).padding(horizontal = if (isLandscape) 80.dp else 48.dp)
+            enter = fadeIn(animationSpec = tween(120)) + scaleIn(
+                initialScale = 0.65f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+            ),
+            exit = fadeOut(animationSpec = tween(180)) + scaleOut(
+                targetScale = 0.75f,
+                animationSpec = tween(180)
+            ),
+            modifier = Modifier
+                .align(alignment)
+                .padding(horizontal = if (isLandscape) 72.dp else 40.dp)
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = if (seekAction == SeekAction.Forward) Icons.Default.Forward10 else Icons.Default.Replay10,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.size(if (isLandscape) 56.dp else 64.dp)
-                )
-                Text(
-                    text = if (seekAction == SeekAction.Forward) "+10s" else "-10s",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Bold
-                )
+            Surface(
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.55f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                modifier = Modifier
+                    .scale(pulseScale)
+                    .size(if (isLandscape) 96.dp else 108.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = if (activeAction == SeekAction.Forward) Icons.Default.Forward10 else Icons.Default.Replay10,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(if (isLandscape) 40.dp else 46.dp)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (activeAction == SeekAction.Forward) "+${seekSeconds}с" else "-${seekSeconds}с",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     }

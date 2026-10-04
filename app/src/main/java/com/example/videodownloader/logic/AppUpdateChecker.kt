@@ -30,6 +30,8 @@ object AppUpdateChecker {
     private const val GITHUB_REPO = "Videx"
     private const val CURRENT_VERSION_NAME = "1.0.4"
 
+    private var pendingInstallFile: File? = null
+
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -109,15 +111,29 @@ object AppUpdateChecker {
         return false
     }
 
-    suspend fun downloadAndInstallApk(context: Context, apkUrl: String, onProgress: (Float) -> Unit): Result<File> = withContext(Dispatchers.IO) {
+    suspend fun downloadAndInstallApk(
+        context: Context,
+        apkUrl: String,
+        forceRedownload: Boolean = false,
+        onProgress: (Float) -> Unit
+    ): Result<File> = withContext(Dispatchers.IO) {
         try {
+            val apkFile = File(context.cacheDir, "videx_update.apk")
+
+            // ⚡️ Если файл уже скачан и его размер больше 5 МБ — используем его без повторного скачивания!
+            if (!forceRedownload && apkFile.exists() && apkFile.length() > 5 * 1024 * 1024L) {
+                AsyncLogger.log(LogLevel.INFO, "Используем ранее скачанный файл APK (${apkFile.length() / (1024 * 1024)} МБ)")
+                onProgress(1.0f)
+                pendingInstallFile = apkFile
+                return@withContext Result.success(apkFile)
+            }
+
+            if (apkFile.exists()) apkFile.delete()
+
             val request = Request.Builder()
                 .url(apkUrl)
                 .header("User-Agent", "Android-Videx-App")
                 .build()
-
-            val apkFile = File(context.cacheDir, "videx_update.apk")
-            if (apkFile.exists()) apkFile.delete()
 
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw Exception("Ошибка скачивания APK (${response.code})")
@@ -141,6 +157,7 @@ object AppUpdateChecker {
                 }
             }
 
+            pendingInstallFile = apkFile
             Result.success(apkFile)
         } catch (e: Exception) {
             Result.failure(e)
@@ -149,6 +166,8 @@ object AppUpdateChecker {
 
     fun promptInstallApk(context: Context, apkFile: File) {
         try {
+            pendingInstallFile = apkFile
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
                 AsyncLogger.log(LogLevel.INFO, "Запрос разрешения на установку из неизвестных источников")
                 val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -169,8 +188,23 @@ object AppUpdateChecker {
                 flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
+            pendingInstallFile = null
         } catch (e: Exception) {
             AsyncLogger.log(LogLevel.ERROR, "Не удалось запустить установщик APK: ${e.message}")
+        }
+    }
+
+    fun checkAndResumePendingInstall(context: Context) {
+        try {
+            val file = pendingInstallFile ?: File(context.cacheDir, "videx_update.apk")
+            if (file.exists() && file.length() > 5 * 1024 * 1024L) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.canRequestPackageInstalls()) {
+                    AsyncLogger.log(LogLevel.INFO, "Автоматическое возобновление установки APK после получения прав")
+                    promptInstallApk(context, file)
+                }
+            }
+        } catch (e: Exception) {
+            AsyncLogger.log(LogLevel.ERROR, "Ошибка возобновления установки APK: ${e.message}")
         }
     }
 }

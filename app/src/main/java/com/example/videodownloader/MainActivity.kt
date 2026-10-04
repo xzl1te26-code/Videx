@@ -1,6 +1,7 @@
 package com.example.videodownloader
 
 import android.Manifest
+import androidx.compose.runtime.DisposableEffect
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -498,6 +499,19 @@ fun AppNavigation(
     val appContext = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         mainViewModel.initHistoryCollection(appContext)
+    }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                com.example.videodownloader.logic.AppUpdateChecker.checkAndResumePendingInstall(appContext)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     LaunchedEffect(activity?.intent) {

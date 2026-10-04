@@ -161,7 +161,7 @@ fun PlayerScreen(
 
     val videoViewBounds = remember { android.graphics.Rect() }
 
-    // 🎬 Загружаем плейлист видео из Истории
+    // Плейлист видео из Истории
     val historyList by HistoryManager.getHistoryFlow(context).collectAsState(initial = emptyList())
     val videoList = remember(historyList, item) {
         val filtered = historyList.filter { it.mediaType == MediaType.VIDEO && !it.isMissing }
@@ -177,7 +177,7 @@ fun PlayerScreen(
         videoList.find { it.id == currentTrackId } ?: item
     }
 
-    // 🎬 ExoPlayer setup (Hardware Composer Surface + Auto-Pause on Unplug + Audio Focus)
+    // Инициализация ExoPlayer
     val exoPlayer = remember {
         val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
             .setUsage(androidx.media3.common.C.USAGE_MEDIA)
@@ -208,7 +208,7 @@ fun PlayerScreen(
             }
     }
 
-    // ⭐️ ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ ПЛЕЙЛИСТА ПРИ ЗАГРУЗКЕ
+    // Обновление плейлиста при загрузке
     LaunchedEffect(videoList) {
         if (videoList.isNotEmpty()) {
             val currentIndex = videoList.indexOfFirst { it.id == currentTrackId }.coerceAtLeast(0)
@@ -281,7 +281,7 @@ fun PlayerScreen(
         }
     }
 
-    // Auto-hide controls: 🧠 Адаптивный умный таймер (сбрасывается при любой активности)
+    // Таймер автоскрытия элементов управления
     LaunchedEffect(showControls, isPlaying, isInPip, isDragging, isGestureInteracting, controlsResetTrigger) {
         if (isInPip) {
             showControls = false
@@ -294,7 +294,7 @@ fun PlayerScreen(
         }
     }
 
-    // Progress update: 🧠 Непрерывное обновление 200 мс даже на паузе
+    // Обновление позиции воспроизведения
     LaunchedEffect(exoPlayer) {
         while (isActive) {
             if (!isDragging) {
@@ -570,7 +570,7 @@ fun PlayerScreen(
                 }
         )
 
-        // 🎬 ПЛАВНЫЙ КРОССФЕЙД ПРЕВЬЮ ПРИ СМЕНЕ ВИДЕО В ПЛЕЙЛИСТЕ
+        // Обложка видео
         val thumbData = remember(currentItem) {
             currentItem.thumbnailUrl?.takeIf { it.isNotBlank() }?.let { url ->
                 if (url.startsWith("http://") || url.startsWith("https://")) url
@@ -1120,7 +1120,7 @@ fun BottomPlayerControls(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ⚡️ Переключатель скорости
+                    // Переключатель скорости
                     Surface(
                         onClick = onSpeedChange,
                         shape = RoundedCornerShape(12.dp),
@@ -1137,7 +1137,7 @@ fun BottomPlayerControls(
                         )
                     }
 
-                    // ⏭️ Предыдущий трек
+                    // Предыдущий трек
                     IconButton(
                         onClick = onPrev,
                         modifier = Modifier.size(40.dp)
@@ -1181,7 +1181,7 @@ fun BottomPlayerControls(
                         Icon(Icons.Default.Forward10, contentDescription = null, tint = Color.White)
                     }
 
-                    // ⏭️ Следующий трек
+                    // Следующий трек
                     IconButton(
                         onClick = onNext,
                         modifier = Modifier.size(40.dp)
@@ -1259,7 +1259,7 @@ fun BottomPlayerControls(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ⚡️ Переключатель скорости
+                    // Переключатель скорости
                     Surface(
                         onClick = onSpeedChange,
                         shape = RoundedCornerShape(12.dp),
@@ -1276,7 +1276,7 @@ fun BottomPlayerControls(
                         )
                     }
 
-                    // ⏭️ Предыдущий трек
+                    // Предыдущий трек
                     IconButton(
                         onClick = onPrev,
                         modifier = Modifier.size(40.dp)
@@ -1320,7 +1320,7 @@ fun BottomPlayerControls(
                         Icon(Icons.Default.Forward10, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
 
-                    // ⏭️ Следующий трек
+                    // Следующий трек
                     IconButton(
                         onClick = onNext,
                         modifier = Modifier.size(40.dp)

@@ -101,7 +101,7 @@ fun GalleryScreen(
 
     LaunchedEffect(showInfo) { if (showInfo) infoPanelOffsetY.snapTo(0f) }
 
-    // 🚀 ЖЕСТКОЕ УДАЛЕНИЕ ЦВЕТНЫХ ПОЛОС (СТАТУС БАРА И НАВИГАЦИИ) ПРИ ПРОСМОТРЕ
+    // Настройка системных баров при просмотре
     LaunchedEffect(showUi) {
         val window = activity?.window ?: return@LaunchedEffect
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -227,7 +227,7 @@ fun GalleryScreen(
         )
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = (1f - backgroundAlpha.value).coerceAtLeast(0.3f))))
 
-        // 🖼️ Основное фото
+        // Изображение
         AsyncImage(
             model = modelUriOrFile,
             contentDescription = null,
@@ -336,7 +336,7 @@ fun GalleryScreen(
             }
         }
 
-        // ℹ️ ШТОРКА СВОЙСТВ: Полное восстановление лучшего дизайна с круглыми иконками
+        // Шторка свойств
         AnimatedVisibility(
             visible = showUi && showInfo,
             enter = fadeIn(tween(250)) + slideInVertically(animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing), initialOffsetY = { it }),

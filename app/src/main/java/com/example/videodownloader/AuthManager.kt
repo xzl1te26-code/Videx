@@ -163,7 +163,7 @@ object AuthManager {
                 }
             }
 
-            // 🧠 КРИТИЧЕСКИЙ БУСТ ДЛЯ YT-DLP: Дублируем сессионные куки Google на домен .youtube.com
+            // Копируем куки Google на домен .youtube.com
             for ((name, value) in googleAuthCookies) {
                 val ytDedupeKey = ".youtube.com_$name"
                 if (!seenCookies.contains(ytDedupeKey)) {

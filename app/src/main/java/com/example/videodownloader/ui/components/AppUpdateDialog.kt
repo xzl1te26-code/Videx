@@ -61,7 +61,7 @@ fun AppUpdateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (isDownloading) {
-                    // 🚀 1. ЭКРАН СКАЧИВАНИЯ APK
+                    // Скачивание файла APK
                     Box(
                         modifier = Modifier
                             .size(64.dp)
@@ -143,7 +143,7 @@ fun AppUpdateDialog(
                     }
 
                 } else {
-                    // 🌟 2. ЭКРАН АНОНСА ОБНОВЛЕНИЯ
+                    // Анонс обновления
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically

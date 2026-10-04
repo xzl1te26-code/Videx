@@ -16,7 +16,7 @@ import org.json.JSONArray
 import java.io.File
 import java.io.FileInputStream
 
-// ⭐️ Модель элемента плейлиста
+// Модель элемента плейлиста
 @Immutable
 data class PlaylistItem(
     val id: String,
@@ -33,8 +33,8 @@ data class VideoMetadata(
     val thumbnailUrl: String,
     val isPhotoPost: Boolean = false,
     val availableQualities: List<String> = emptyList(),
-    val isPlaylist: Boolean = false, // ⭐️ Флаг плейлиста
-    val playlistEntries: List<PlaylistItem> = emptyList() // ⭐️ Список роликов
+    val isPlaylist: Boolean = false,
+    val playlistEntries: List<PlaylistItem> = emptyList()
 )
 
 interface DownloadProgressListener {

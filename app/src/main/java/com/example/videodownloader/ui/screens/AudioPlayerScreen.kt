@@ -156,7 +156,7 @@ fun AudioPlayerScreen(
 
     val audioIds = remember(audioList) { audioList.map { it.id } }
 
-    // ⭐️ ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ ПЛЕЙЛИСТА EXOPLAYER ПРИ ИЗМЕНЕНИИ СОСТАВА ТРЕКОВ ИЗ ИСТОРИИ
+    // Обновление плейлиста ExoPlayer при изменении треков
     LaunchedEffect(audioIds) {
         if (audioList.isNotEmpty()) {
             val currentIndex = audioList.indexOfFirst { it.id == currentTrackId }.coerceAtLeast(0)
@@ -212,7 +212,7 @@ fun AudioPlayerScreen(
     val speedOptions = remember { listOf(1.0f, 1.25f, 1.5f, 2.0f) }
     val currentSpeed = speedOptions[speedIndex]
 
-    // 🍎 Apple Music / Spotify Двойной тап перемотки / Предыдущий трек
+    // Кнопки перемотки и переключения
     fun playPreviousOrRestart() {
         view.performAppHaptic(HapticType.CLICK)
         val currentPos = exoPlayer.currentPosition
@@ -240,7 +240,7 @@ fun AudioPlayerScreen(
         }
     }
 
-    // 🍎 Apple Music / Spotify Интерактивный масштабируемый эффект обложки (1.0f при игрании, 0.88f при паузе)
+    // Анимация масштаба обложки при воспроизведении (1.0f при проигрывании, 0.88f на паузе)
     val coverScale by animateFloatAsState(
         targetValue = if (isPlaying) 1.0f else 0.88f,
         animationSpec = spring(
@@ -260,7 +260,7 @@ fun AudioPlayerScreen(
         }
     }
 
-    // ⭐️ Синхронизация Slider с позицией ExoPlayer ТОЛЬКО когда пользователь НЕ тащит ползунок
+    // Синхронизация Slider с позицией ExoPlayer
     LaunchedEffect(position, duration, isDragging) {
         if (!isDragging && duration > 0) {
             localSliderValue = (position.toFloat() / duration).coerceIn(0f, 1f)
@@ -482,7 +482,7 @@ fun AudioPlayerScreen(
 
             Spacer(modifier = Modifier.weight(0.3f))
 
-            // 🍎 Современная обложка в стиле Apple Music / Spotify с анимированным кроссфейдом и скейлом
+            // Обложка трека
             AnimatedContent(
                 targetState = currentItem,
                 transitionSpec = {
@@ -600,7 +600,7 @@ fun AudioPlayerScreen(
 
             Spacer(modifier = Modifier.weight(0.4f))
 
-            // 🎛️ Элементы управления воспроизведением
+            // Элементы управления воспроизведением
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -643,7 +643,7 @@ fun AudioPlayerScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 🔁 Кнопка цикла (Repeat)
+                    // Кнопка повтора трека
                     IconButton(
                         onClick = {
                             view.performAppHaptic(HapticType.CLICK)
@@ -659,7 +659,7 @@ fun AudioPlayerScreen(
                         )
                     }
 
-                    // ⏭️ Предыдущий трек / Сброс на начало (Spotify/Apple Music)
+                    // Предыдущий трек
                     IconButton(
                         onClick = { playPreviousOrRestart() },
                         modifier = Modifier.size(48.dp)
@@ -667,7 +667,7 @@ fun AudioPlayerScreen(
                         Icon(Icons.Default.SkipPrevious, contentDescription = "Предыдущий трек", tint = Color.White, modifier = Modifier.size(34.dp))
                     }
 
-                    // ⏯️ Воспроизведение / Пауза
+                    // Воспроизведение / Пауза
                     Surface(
                         onClick = {
                             view.performAppHaptic(HapticType.CLICK)
@@ -688,7 +688,7 @@ fun AudioPlayerScreen(
                         }
                     }
 
-                    // ⏭️ Следующий трек (Spotify/Apple Music)
+                    // Следующий трек
                     IconButton(
                         onClick = { playNextTrack() },
                         modifier = Modifier.size(48.dp)
@@ -696,7 +696,7 @@ fun AudioPlayerScreen(
                         Icon(Icons.Default.SkipNext, contentDescription = "Следующий трек", tint = Color.White, modifier = Modifier.size(34.dp))
                     }
 
-                    // ⚡️ Переключатель скорости (1.0x -> 1.25x -> 1.5x -> 2.0x)
+                    // Скорость воспроизведения
                     Surface(
                         onClick = {
                             view.performAppHaptic(HapticType.CLICK)

@@ -165,11 +165,11 @@ class NotificationReceiver : BroadcastReceiver() {
                         try {
                             val item = HistoryManager.getEntryById(context, itemId)
                             if (item != null) {
-                                // 🧠 Усовершенствованный алгоритм "Умного транзита"
+                                // Расчет задержки перед удалением транзитного файла
                                 val isWifi = com.example.videodownloader.utils.isWifiConnected(context)
                                 val avgSpeed = if (isWifi) SettingsManager.avgSpeedWifi.value else SettingsManager.avgSpeedMobile.value
                                 
-                                // Коэффициент запаса 2.5x (учитываем, что Upload обычно медленнее Download)
+                                // Коэффициент запаса 2.5x (учитываем скорость отдачи)
                                 val estimatedUploadTimeMs = ((item.sizeBytes.toDouble() / avgSpeed) * 2500).toLong()
                                 val baseSafetyTimeMs = 20000L
                                 
@@ -177,7 +177,7 @@ class NotificationReceiver : BroadcastReceiver() {
 
                                 AsyncLogger.log(LogLevel.INFO, "Умный транзит: Планирование удаления через ${finalDelayMs / 1000}с для файла $itemId (Сеть: ${if (isWifi) "Wi-Fi" else "Mobile"})")
 
-                                // 🚀 Гарантированное удаление через WorkManager
+                                // Запуск фонового удаления через WorkManager
                                 val cleanupRequest = androidx.work.OneTimeWorkRequestBuilder<CleanupWorker>()
                                     .setInitialDelay(finalDelayMs, java.util.concurrent.TimeUnit.MILLISECONDS)
                                     .setInputData(androidx.work.workDataOf(CleanupWorker.KEY_ITEM_ID to itemId))

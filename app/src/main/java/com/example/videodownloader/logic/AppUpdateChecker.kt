@@ -127,7 +127,7 @@ object AppUpdateChecker {
         try {
             val apkFile = File(context.cacheDir, "videx_update.apk")
 
-            // ⚡️ Если файл уже скачан и его размер больше 5 МБ — используем его без повторного скачивания!
+            // Использование ранее скачанного файла при наличии в кэше
             if (!forceRedownload && apkFile.exists() && apkFile.length() > 5 * 1024 * 1024L) {
                 AsyncLogger.log(LogLevel.INFO, "Используем ранее скачанный файл APK (${apkFile.length() / (1024 * 1024)} МБ)")
                 onProgress(1.0f)

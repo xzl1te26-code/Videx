@@ -16,7 +16,7 @@ class App : PyApplication() {
         YtDlpBridge.init(this)
         AnalysisManager.init(this)
         
-        // 🧠 Запускаем инициализацию настроек в фоне для ускорения App.onCreate
+        // Фоновая инициализация настроек
         CoroutineScope(Dispatchers.IO).launch {
             SettingsManager.init(this@App)
             YtDlpBridge.warmUp(this@App)

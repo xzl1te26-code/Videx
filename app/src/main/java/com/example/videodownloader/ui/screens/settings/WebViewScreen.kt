@@ -88,7 +88,7 @@ fun WebViewScreen(url: String, title: String, onBack: () -> Unit) {
                             mediaPlaybackRequiresUserGesture = false
                             cacheMode = WebSettings.LOAD_DEFAULT
                             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                            // 🛡️ Чистый Desktop Chrome User-Agent предотвращает ошибку Google 'disallowed_useragent'
+                            // Desktop Chrome User-Agent для совместимости с Google Auth
                             userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
                         }
                         CookieManager.getInstance().setAcceptCookie(true)

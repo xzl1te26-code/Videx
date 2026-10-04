@@ -2,7 +2,7 @@ package com.example.videodownloader.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 🛡️ Pro Material 3 Designer Palette (High-Contrast, Pure Porcelain & Royal Navy, Zero Green)
+// Material 3 Designer Palette
 
 // DARK THEME (Apple Space Black & Soft Titanium Ice)
 val TitaniumBlueDark = Color(0xFFC0D0E8)              // Soft Ice Slate Blue (Primary)

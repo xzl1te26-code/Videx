@@ -145,7 +145,7 @@ object PerformanceManager {
         
         frameMetricsListener = null
 
-        // 🧠 Исправляем утечку: корректно завершаем фоновый поток мониторинга
+        // Завершаем фоновый поток мониторинга
         try {
             handlerThread?.quitSafely()
         } catch (e: Exception) {

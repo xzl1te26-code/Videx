@@ -39,7 +39,7 @@ object AsyncLogger {
         if (isInitialized.getAndSet(true)) return
         logFile = File(context.filesDir, "app_system.log")
 
-        // 🧠 ОПТИМИЗИРОВАННЫЙ ВОРКЕР: Записывает логи пачками для экономии I/O
+        // Фоновая запись логов пачками
         startLogWorker()
 
         // Считываем сохраненные логи с диска при запуске приложения (оптимизировано)
@@ -58,7 +58,7 @@ object AsyncLogger {
                         val loadedLogs = mutableListOf<LogEntry>()
                         val logPattern = Regex("""^\[(.*?)\] \[(.*?)\] (.*)$""")
                         
-                        // 🧠 ОПТИМИЗАЦИЯ: Читаем только хвост файла (последние ~64 КБ)
+                        // Чтение последних 64 КБ файла
                         val maxReadBytes = 64 * 1024L
                         val fileLength = file.length()
                         val startPos = if (fileLength > maxReadBytes) fileLength - maxReadBytes else 0L

@@ -251,7 +251,7 @@ fun HistoryScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    // ⚡️ МГНОВЕННЫЙ ДОСТУП К ДАННЫМ: Используем кэшированное состояние из ViewModel
+    // Получаем состояние истории из ViewModel
     val fileList by mainViewModel.historyState.collectAsState()
 
     var isScanning by remember { mutableStateOf(false) }
@@ -288,7 +288,7 @@ fun HistoryScreen(
     val showStorageStats by SettingsManager.showStorageStats.collectAsState()
     val useInternalPlayer by SettingsManager.useInternalPlayer.collectAsState()
 
-    // 🧠 ОПТИМИЗАЦИЯ: Считаем статистику одним проходом по списку
+    // Вычисление статистики за один проход
     val stats = remember(fileList) {
         var missing = 0
         var video = 0

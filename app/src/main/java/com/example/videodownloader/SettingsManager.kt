@@ -64,7 +64,7 @@ object SettingsManager {
     private const val KEY_TRANSIT_MODE_PLATFORMS = "transit_mode_platforms"
     private const val KEY_AUTO_CLEANUP_LOGS = "auto_cleanup_logs"
 
-    // ⭐️ РАЗДЕЛЬНЫЕ ПОВТОРЫ (Wi-Fi и Mobile)
+    // Повторы (Wi-Fi и Mobile)
     private const val KEY_SINGLE_RETRY_WIFI = "single_retry_wifi"
     private const val KEY_QUEUE_RETRY_WIFI = "queue_retry_wifi"
     private const val KEY_SINGLE_RETRY_MOBILE = "single_retry_mobile"
@@ -215,7 +215,7 @@ object SettingsManager {
     private val _avgSpeedMobile = MutableStateFlow(2 * 1024 * 1024L) // Дефолт Mobile: 2 МБ/с
     val avgSpeedMobile: StateFlow<Long> = _avgSpeedMobile
 
-    // ⭐️ СОСТОЯНИЯ ПОВТОРОВ
+    // Повторы загрузки
     private val _singleRetryWifi = MutableStateFlow(1)
     val singleRetryWifi: StateFlow<Int> = _singleRetryWifi
 
@@ -404,7 +404,7 @@ object SettingsManager {
         prefs?.edit()?.putString(key, rule.name)?.apply()
     }
 
-    // ⭐️ МЕТОДЫ ДЛЯ ПОВТОРОВ
+    // Настройка количества повторов
     fun setSingleRetryCount(count: Int, isWifi: Boolean) {
         if (isWifi) {
             _singleRetryWifi.value = count

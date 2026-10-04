@@ -490,7 +490,7 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 🖥️ ЧИСТАЯ КОНСОЛЬ ЛОГОВ С МОНОШИРИННЫМ ШРИФТОМ
+            // Консоль вывода логов
             Surface(
                 modifier = Modifier
                     .fillMaxSize()

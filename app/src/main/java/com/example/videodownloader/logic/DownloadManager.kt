@@ -120,8 +120,7 @@ object DownloadManager {
         val maxSlots = SettingsManager.maxParallelDownloads.value
         val tasks = _activeTasks.value
 
-        // 🧠 Алгоритм "Наименьшей нагрузки" (Least Loaded)
-        // Считаем количество активных задач для каждого разрешенного слота
+        // Распределение нагрузки по слотам
         val slotLoads = (1..maxSlots).associateWith { slot ->
             tasks.count { it.slot == slot }
         }
@@ -166,7 +165,7 @@ object DownloadManager {
         val throttledRate = if (isWifi) SettingsManager.throttledRateWifi.value else SettingsManager.throttledRateMobile.value
         val maxRetries = if (isWifi) SettingsManager.singleRetryWifi.value else SettingsManager.singleRetryMobile.value
         
-        // 🧠 Эстафетная передача: Передаем путь к паспорту в воркер
+        // Передача пути к паспорту метаданных
         val passportPath = CacheManager.getPassportFile(appContext, url).absolutePath
 
         val downloadWorkRequest = OneTimeWorkRequestBuilder<DownloadWorker>()

@@ -391,7 +391,7 @@ fun PlatformRuleBottomSheet(
                 Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
-            // 🧠 ОПТИМИЗАЦИЯ: Показываем предупреждение только если РЕАЛЬНО есть конфликт (выбран "Анализ")
+            // Предупреждение о конфликте параметров
             if (isSilentMode && currentRule == PlatformDownloadRule.PREVIEW_ONLY) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),

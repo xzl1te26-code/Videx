@@ -59,7 +59,7 @@ fun TipFramesSettingsScreen(
         )
     }
 
-    // 🎬 ЖИВОЙ ПРЕДПРОСМОТР В РЕАЛЬНОМ ВРЕМЕНИ
+    // Предпросмотр кадров
     var previewIndex by remember { mutableIntStateOf(0) }
     var isPreviewPlaying by remember { mutableStateOf(true) }
 
@@ -266,7 +266,7 @@ fun TipFramesSettingsScreen(
                 }
             }
 
-            // ✏️ РЕДАКТИРОВАНИЕ КАЖДОГО КАДРА
+            // Редактирование кадров
             item {
                 Text(
                     text = "НАСТРОЙКА СОДЕРЖИМОГО",

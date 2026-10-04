@@ -47,7 +47,7 @@ object AnalysisManager {
     private val _playlistEntries = MutableStateFlow<List<PlaylistItem>>(value = emptyList())
     val playlistEntries: StateFlow<List<PlaylistItem>> = _playlistEntries
 
-    // 🧠 КРАТКОСРОЧНЫЙ КЭШ: Храним результаты последних анализов (5 минут)
+    // Краткосрочный кэш результатов анализа (5 минут)
     private val analysisCache = mutableMapOf<String, Pair<VideoMetadata, Long>>()
     private const val CACHE_EXPIRATION_MS = 5 * 60 * 1000L // 5 минут
 
@@ -97,10 +97,10 @@ object AnalysisManager {
     }
 
     private fun startBackgroundAnalysis(targetUrl: String) {
-        if (analyzeJob?.isActive == true && _url.value == targetUrl) return // 🛡️ Не перезапускаем текущий анализ
+        if (analyzeJob?.isActive == true && _url.value == targetUrl) return // Не перезапускаем текущий анализ
         analyzeJob?.cancel()
         
-        // 1. 🧠 ПРОВЕРКА ОПЕРАТИВНОЙ ПАМЯТИ
+        // 1. Проверка оперативной памяти
         val cached = analysisCache[targetUrl]
         if (cached != null && (System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS)) {
             applyMetadata(cached.first)
@@ -108,7 +108,7 @@ object AnalysisManager {
             return
         }
 
-        // 2. 🧠 ПРОВЕРКА ДИСКОВОГО ПАСПОРТА (Digital Passport)
+        // 2. Проверка сохраненных данных на диске
         // Если в RAM нет, пробуем прочитать JSON файл напрямую без Python
         appContext?.let { ctx ->
             val passportFile = CacheManager.getPassportFile(ctx, targetUrl)
@@ -149,7 +149,7 @@ object AnalysisManager {
 
                 applyMetadata(meta)
 
-                // 🚀 ПРЕДЗАГРУЗКА ОБЛОЖКИ
+                // Предзагрузка обложки
                 appContext?.let { ctx ->
                     if (meta.thumbnailUrl.isNotBlank()) {
                         val request = ImageRequest.Builder(ctx)

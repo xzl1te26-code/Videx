@@ -54,7 +54,7 @@ class DownloadWorker(
         const val KEY_THROTTLED_RATE = "KEY_THROTTLED_RATE"
         const val KEY_MAX_RETRIES = "KEY_MAX_RETRIES"
         const val KEY_THUMBNAIL = "KEY_THUMBNAIL"
-        const val KEY_PASSPORT = "KEY_PASSPORT" // 🧠 Путь к JSON-паспорту
+        const val KEY_PASSPORT = "KEY_PASSPORT" // Путь к JSON-паспорту
         const val KEY_PROGRESS = "KEY_PROGRESS"
         const val KEY_SLOT = "KEY_SLOT"
         const val KEY_IS_BATCH = "KEY_IS_BATCH"
@@ -79,7 +79,7 @@ class DownloadWorker(
         val thumbnailUrl = inputData.getString(KEY_THUMBNAIL)
         val passportPath = inputData.getString(KEY_PASSPORT) ?: ""
 
-        // 🧠 Динамически вычисляем актуальные параметры сети прямо перед стартом скачивания (Wi-Fi vs Мобильная сеть)
+        // Параметры сети (Wi-Fi vs Mobile)
         val isWifi = com.example.videodownloader.utils.isWifiConnected(context)
         val threads = if (isWifi) SettingsManager.threadsWifi.value else SettingsManager.threadsMobile.value
         val rateLimit = if (isWifi) SettingsManager.rateLimitWifi.value else SettingsManager.rateLimitMobile.value
@@ -130,7 +130,7 @@ class DownloadWorker(
         var downloadTitle = title
         var downloadThumbnail = thumbnailUrl
 
-        // ⭐️ 1. РАЗРЕШЕНИЕ МЕТАДАННЫХ ДЛЯ АВТОПИЛОТА: Если заголовок - заглушка ("Анализ..."), извлекаем настоящее имя ДО генерации имени файла
+        // Разрешение метаданных: извлечение имени до генерации имени файла
         if (title.startsWith("Анализ ") || title.isBlank() || title == "Медиа") {
             try {
                 val result = YtDlpBridge.fetchInfo(url)
@@ -145,7 +145,7 @@ class DownloadWorker(
             }
         }
 
-        // ⭐️ 2. ГЕНЕРАЦИЯ ИМЕНИ ФАЙЛА ПО ШАБЛОНУ (на основе РЕАЛЬНОГО имени downloadTitle)
+        // Генерация имени файла по шаблону
         val template = SettingsManager.fileNameTemplate.value
         val platform = detectPlatformName(url)
         val isPlaceholderTitle = downloadTitle.startsWith("Анализ ") || downloadTitle.isBlank()
@@ -235,7 +235,7 @@ class DownloadWorker(
                         SettingsManager.updateAvgSpeed(speed, isWifi)
                     }
 
-                    // 🧠 ТЕРМАЛЬНЫЙ ТРОТТЛИНГ: Если устройство перегрето, притормаживаем корутину
+                    // Ограничение нагрузки при нагреве устройства
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         val status = PerformanceManager.thermalStatus.value
                         if (status >= PowerManager.THERMAL_STATUS_SEVERE) {
@@ -244,7 +244,7 @@ class DownloadWorker(
                         }
                     }
 
-                    // 🛡 Rate Limiting: Обновляем уведомление не чаще чем раз в 1.2 секунды
+                    // Обновление уведомления не чаще чем раз в 1.2 секунды
                     if (currentTime - lastUpdateTime >= 1200 || progress == 100) {
                         if (progress != lastProgress || currentTime - lastUpdateTime >= 2000) {
                             lastProgress = progress
@@ -438,7 +438,7 @@ class DownloadWorker(
                     context, (0..1000).random(), viewIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
 
-                // ⭐️ Нажатие на само тело карточки уведомления автоматически открывает файл
+                // Нажатие на уведомление открывает файл
                 builder.setContentIntent(viewPendingIntent)
 
                 if (SettingsManager.notifActionOpen.value) {
@@ -446,7 +446,7 @@ class DownloadWorker(
                 }
 
                 if (SettingsManager.notifActionShare.value) {
-                    // ⭐️ FIX: Reliable sharing via direct Activity PendingIntent
+                    // Передача файла через Activity PendingIntent
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = mimeType
                         putExtra(Intent.EXTRA_STREAM, uri)

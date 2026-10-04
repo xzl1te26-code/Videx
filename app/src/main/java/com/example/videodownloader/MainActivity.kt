@@ -203,7 +203,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // 🛡️ Fix: PiP controls come from System UI, so the receiver MUST be exported
+            // Регистрация приемника сигналов PiP
             registerReceiver(pipReceiver, IntentFilter(ACTION_PIP_CONTROL), RECEIVER_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
@@ -565,7 +565,7 @@ fun AppNavigation(
         }
     }
 
-    // 🧠 УЛУЧШЕННЫЙ АЛГОРИТМ СКРЫТИЯ ДОКА (Hysteresis + Contextual Return)
+    // Скрытие панели навигации при скролле
     var isDockVisible by remember { mutableStateOf(true) }
     var scrollAccumulator by remember { mutableFloatStateOf(0f) }
 

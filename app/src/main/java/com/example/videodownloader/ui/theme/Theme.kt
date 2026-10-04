@@ -106,7 +106,7 @@ fun VideoDownloaderTheme(
         }
     }
 
-    // 🚀 ВЫСОКОПРОИЗВОДИТЕЛЬНЫЙ 120 FPS GPU CROSSFADE ПЕРЕХОД ТЕМЫ
+    // Анимация перехода темы
     val themeKey = remember(isDark, dynamicColor) { "$isDark-$dynamicColor" }
 
     Crossfade(

@@ -45,7 +45,7 @@ fun AboutScreen(onBack: () -> Unit) {
     var showPlatformsSheet by remember { mutableStateOf(false) }
     var showTechSpecsSheet by remember { mutableStateOf(false) }
 
-    // 🌟 1. ШТОРКА "ВОЗМОЖНОСТИ И ОСОБЕННОСТИ"
+    // Шторка возможностей
     if (showFeaturesSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFeaturesSheet = false },
@@ -152,7 +152,7 @@ fun AboutScreen(onBack: () -> Unit) {
         }
     }
 
-    // 🌟 2. ШТОРКА "ПОДДЕРЖИВАЕМЫЕ ПЛАТФОРМЫ"
+    // Шторка поддерживаемых платформ
     if (showPlatformsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showPlatformsSheet = false },
@@ -245,7 +245,7 @@ fun AboutScreen(onBack: () -> Unit) {
         }
     }
 
-    // 🌟 3. ШТОРКА "СИСТЕМНЫЕ И ТЕХНИЧЕСКИЕ СВЕДЕНИЯ"
+    // Шторка технических сведений
     if (showTechSpecsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showTechSpecsSheet = false },

@@ -52,7 +52,7 @@ object CacheManager {
     suspend fun clearCache(context: Context): Boolean = withContext(Dispatchers.IO) {
         val appContext = context.applicationContext
         try {
-            // ⚡ Безопасная очистка: не удаляем файл куки yt-dlp
+            // Не удаляем файл куки yt-dlp
             appContext.cacheDir.listFiles()?.forEach { file ->
                 if (file.name != "yt_dlp_cookies.txt" && file.name != "passports") {
                     file.deleteRecursively()

@@ -45,7 +45,7 @@ fun exportSmartDiagnosticReport(context: Context, logs: List<LogEntry>) {
         sb.append("• Модель: ${Build.MANUFACTURER} ${Build.MODEL}\n")
         sb.append("• Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n")
         
-        // ⭐️ PERFORMANCE DATA
+        // Данные производительности
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
             val thermal = powerManager?.currentThermalStatus ?: -1

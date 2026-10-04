@@ -21,20 +21,19 @@ import com.example.videodownloader.MediaType
 
 class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
     
-    // 🏛️ ЦЕНТРАЛИЗОВАННОЕ ХРАНИЛИЩЕ ИСТОРИИ (для мгновенного доступа без лагов)
+    // Хранилище состояния истории
     private val _historyState = MutableStateFlow<List<DownloadedFileItem>>(emptyList())
     val historyState: StateFlow<List<DownloadedFileItem>> = _historyState.asStateFlow()
 
-    // 💾 СОСТОЯНИЕ ЭКРАНА ИСТОРИИ (сохраняется при навигации)
+    // Состояние экрана истории
     var historySearchQuery by mutableStateOf("")
     var historySelectedTypeFilter by mutableStateOf<MediaType?>(null)
     
-    // Состояние скролла списка истории (тоже выносим сюда для персистентности)
-    // Мы не можем хранить LazyListState в ViewModel напрямую, но можем хранить индекс и оффсет
+    // Состояние скролла списка истории
     var historyScrollIndex by mutableIntStateOf(0)
     var historyScrollOffset by mutableIntStateOf(0)
 
-    // 🗺️ ГЛОБАЛЬНОЕ СОСТОЯНИЕ ЭКРАНА (персистентность при сворачивании приложения)
+    // Текущий активный экран
     var currentScreen by mutableStateOf(com.example.videodownloader.Screen.Home)
 
     // 📋 Отклоненная ссылка из буфера обмена (персистентное состояние между вкладками)
@@ -90,7 +89,7 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
             }
         }
 
-        // ⭐️ АВТО-СБРОС КАЧЕСТВА ПРИ НОВОМ АНАЛИЗЕ
+        // Автосброс качества на дефолтное при новом анализе
         viewModelScope.launch {
             AnalysisManager.isAnalyzing.collectLatest { analyzing ->
                 if (analyzing) {

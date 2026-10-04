@@ -67,9 +67,9 @@ data class DownloadedFileItem(
     val mediaType: MediaType,
     val sourceUrl: String = "",
     val thumbnailUrl: String? = null,
-    val durationMs: Long = 0L, // ⏱️ Длительность для "цифрового бессмертия"
+    val durationMs: Long = 0L, // Длительность видео/аудио
     val timestamp: Long = System.currentTimeMillis(),
-    val isMissing: Boolean = false, // 🧠 Кэшируем статус наличия файла
+    val isMissing: Boolean = false, // Статус наличия файла на диске
 )
 
 // ==========================================
@@ -303,10 +303,10 @@ object HistoryManager {
         val dateStr = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date())
         val sizeFormatted = formatBytes(sizeBytes)
 
-        // 🖼️ Гарантированно кэшируем обложку локально в файл
+        // Кэшируем обложку локально в файл
         val cachedThumbnail = cacheThumbnailLocally(appContext, pathOrUri, mediaType, thumbnailUrl)
 
-        // ⏱️ Пытаемся получить длительность для видео/аудио
+        // Получаем длительность для видео/аудио
         val duration = if (mediaType != MediaType.PHOTO) getMediaDuration(appContext, pathOrUri) else 0L
 
         val item = DownloadedFileItem(
@@ -442,7 +442,7 @@ object HistoryManager {
             needsUpdate = true
         }
 
-        // 🧠 Кэшируем обложку для старых/существующих видеозаписей, если локального файла нет
+        // Кэшируем обложку для видеозаписей, если локального файла нет
         if (exists && (item.thumbnailUrl.isNullOrBlank() || item.thumbnailUrl.startsWith("http://") || item.thumbnailUrl.startsWith("https://") || !File(item.thumbnailUrl).exists())) {
             val newThumbPath = cacheThumbnailLocally(appContext, item.pathOrUri, item.mediaType, item.thumbnailUrl)
             if (!newThumbPath.isNullOrBlank() && newThumbPath != item.thumbnailUrl) {
@@ -611,14 +611,14 @@ object HistoryManager {
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         )
-        // ⭐️ Add Downloads collection for Android 10+ (API 29+)
+        // Добавляем коллекцию Downloads для Android 10+ (API 29+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             collections.add(MediaStore.Downloads.EXTERNAL_CONTENT_URI)
         }
         
         for (baseUri in collections) {
             try {
-                // ⭐️ Fix: Combined search by DATA (legacy) and DISPLAY_NAME + SIZE for more reliability
+                // Поиск по DATA, DISPLAY_NAME и SIZE
                 val fileName = File(path).name
                 val fileSize = File(path).length()
                 
@@ -733,7 +733,7 @@ object HistoryManager {
         val appContext = context.applicationContext
         val dao = AppDatabase.getDatabase(appContext).historyDao()
 
-        // 🛡️ 1. Очищаем из БД системный мусор корзины (.trashed, .pending), если он туда уже случайно попал
+        // Очищаем из БД системные временные файлы (.trashed, .pending)
         val allEntries = dao.getAll()
         allEntries.filter { isTrashedOrTempPath(it.pathOrUri) || isTrashedOrTempPath(it.name) }
             .forEach { dao.deleteById(it.id) }
@@ -757,7 +757,7 @@ object HistoryManager {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + "/Videx",
         )
 
-        // 🛡️ Добавляем пользовательский каталог из Настроек, если он задан
+        // Добавляем пользовательский каталог из Настроек
         val customUri = SettingsManager.getCustomDirUri()
         if (customUri != null) {
             try {
@@ -793,8 +793,7 @@ object HistoryManager {
                     val duration = if (mediaType != MediaType.PHOTO) getMediaDuration(appContext, file.absolutePath) else 0L
                     val fingerprintByMeta = "${size}_$duration"
                     
-                    // 🧠 ЛОГИКА "ЦИФРОВОГО БЕССМЕРТИЯ":
-                    // Если мы нашли файл, которого нет в базе по пути, проверяем, не является ли он переименованным старым файлом
+                    // Проверяем, не является ли файл переименованным ранее скачанным ролика
                     val healingTarget = if (mediaType != MediaType.PHOTO) missingMap[fingerprintByMeta]?.firstOrNull() else null
                     
                     if (healingTarget != null) {
@@ -811,7 +810,7 @@ object HistoryManager {
                         val nameFingerprint = "${cleanFileName}_${size}"
                         
                         if (!existingFingerprints.contains(nameFingerprint)) {
-                            // 🧠 Кэшируем превью-кадр для вновь найденного видеофайла
+                            // Кэшируем превью-кадр для найденного видеофайла
                             val localThumb = if (mediaType == MediaType.VIDEO) {
                                 cacheThumbnailLocally(appContext, file.absolutePath, mediaType, null)
                             } else null

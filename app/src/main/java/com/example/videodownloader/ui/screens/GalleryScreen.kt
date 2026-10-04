@@ -2,7 +2,8 @@ package com.example.videodownloader.ui.screens
 
 import android.app.Activity
 import android.net.Uri
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -181,12 +182,12 @@ fun GalleryScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { 
-                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        view.performAppHaptic(HapticType.CLICK)
                         if (showInfo) showInfo = false else showUi = !showUi 
                     },
                     onDoubleTap = { tapOffset ->
                         if (showInfo) return@detectTapGestures
-                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        view.performAppHaptic(HapticType.LONG_PRESS)
                         coroutineScope.launch {
                             if (scale.value > 1f) { resetTransforms(); isSwipingToDismiss = false }
                             else {
@@ -307,7 +308,7 @@ fun GalleryScreen(
                 ) {
                     // Поделиться
                     ActionIconButton(Icons.Default.Share) {
-                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        view.performAppHaptic(HapticType.CLICK)
                         val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                             type = "image/*"
                             putExtra(android.content.Intent.EXTRA_STREAM, modelUriOrFile.let { if (it is File) Uri.fromFile(it) else it as Uri })
@@ -320,7 +321,7 @@ fun GalleryScreen(
 
                     // Информация
                     ActionIconButton(Icons.Rounded.Info) {
-                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        view.performAppHaptic(HapticType.CLICK)
                         showInfo = true
                     }
 
@@ -328,7 +329,7 @@ fun GalleryScreen(
 
                     // Удалить
                     ActionIconButton(Icons.Default.DeleteOutline, tint = Color(0xFFFF453A)) {
-                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        view.performAppHaptic(HapticType.LONG_PRESS)
                         showDeleteDialog = true
                     }
                 }
@@ -352,7 +353,7 @@ fun GalleryScreen(
                         detectVerticalDragGestures(
                             onDragEnd = {
                                 coroutineScope.launch {
-                                    if (infoPanelOffsetY.value > 120f) { showInfo = false; view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY) }
+                                    if (infoPanelOffsetY.value > 120f) { showInfo = false; view.performAppHaptic(HapticType.CLICK) }
                                     else infoPanelOffsetY.animateTo(0f, spring())
                                 }
                             },
@@ -427,7 +428,7 @@ fun GalleryScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             IconButton(
                                 onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     clipboardManager.setText(AnnotatedString(item.pathOrUri))
                                     Toast.makeText(context, "Путь скопирован в буфер", Toast.LENGTH_SHORT).show()
                                 },

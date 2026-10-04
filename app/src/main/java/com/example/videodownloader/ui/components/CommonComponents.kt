@@ -1,6 +1,7 @@
 package com.example.videodownloader.ui.components
 
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -239,7 +240,7 @@ fun PlaylistSelectionBottomSheet(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     if (isAudioMode) {
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        view.performAppHaptic(HapticType.CLICK)
                                         isAudioMode = false
                                     }
                                 },
@@ -273,7 +274,7 @@ fun PlaylistSelectionBottomSheet(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     if (!isAudioMode) {
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        view.performAppHaptic(HapticType.CLICK)
                                         isAudioMode = true
                                     }
                                 },
@@ -332,7 +333,7 @@ fun PlaylistSelectionBottomSheet(
                 FilterChip(
                     selected = allSelected,
                     onClick = {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        view.performAppHaptic(HapticType.CLICK)
                         selectedIds = if (allSelected) emptySet() else entries.map { it.id }.toSet()
                     },
                     label = {
@@ -380,7 +381,7 @@ fun PlaylistSelectionBottomSheet(
                             .scale(cardScale)
                             .clip(RoundedCornerShape(16.dp))
                             .clickable {
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                view.performAppHaptic(HapticType.CLICK)
                                 selectedIds = if (isSelected) selectedIds - item.id else selectedIds + item.id
                             }
                     ) {
@@ -445,7 +446,7 @@ fun PlaylistSelectionBottomSheet(
                             Checkbox(
                                 checked = isSelected,
                                 onCheckedChange = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     selectedIds = if (it) selectedIds + item.id else selectedIds - item.id
                                 },
                                 colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
@@ -713,7 +714,7 @@ fun M3SegmentedControl(
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
                             if (isAuto) {
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                view.performAppHaptic(HapticType.CLICK)
                                 onSelect(ShareActionGlobal.PREVIEW)
                             }
                         },
@@ -747,7 +748,7 @@ fun M3SegmentedControl(
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
                             if (!isAuto) {
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                view.performAppHaptic(HapticType.CLICK)
                                 onSelect(ShareActionGlobal.AUTOPILOT)
                             }
                         },
@@ -873,7 +874,7 @@ fun CustomAppSnackbar(snackbarData: SnackbarData) {
 
             val view = LocalView.current
             LaunchedEffect(snackbarData.visuals.message) {
-                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                view.performAppHaptic(HapticType.SUCCESS)
             }
 
             Surface(

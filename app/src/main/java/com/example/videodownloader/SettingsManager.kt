@@ -13,6 +13,8 @@ enum class PlatformDownloadRule { VIDEO, AUDIO, PREVIEW_ONLY }
 enum class FileNameTemplate { TITLE_PLATFORM, DATE_TITLE }
 enum class MinDiskSpace(val bytes: Long) { NONE(0L), MB500(500L * 1024 * 1024), GB1(1024L * 1024 * 1024) }
 enum class AppTheme { SYSTEM, DARK, LIGHT }
+enum class HapticIntensity { SOFT, STANDARD, STRONG }
+enum class HapticType { CLICK, LONG_PRESS, PLAYER_GESTURE, SUCCESS, SELECTION }
 
 data class TipFrameData(
     val iconKey: String,
@@ -85,6 +87,12 @@ object SettingsManager {
     private const val KEY_RULE_INSTAGRAM = "rule_instagram"
     private const val KEY_RULE_PINTEREST = "rule_pinterest"
     private const val KEY_RULE_OTHER = "rule_other"
+
+    private const val KEY_HAPTIC_ENABLED = "haptic_enabled"
+    private const val KEY_HAPTIC_INTENSITY = "haptic_intensity"
+    private const val KEY_HAPTIC_BUTTONS = "haptic_buttons"
+    private const val KEY_HAPTIC_PLAYER = "haptic_player"
+    private const val KEY_HAPTIC_LONG_PRESS = "haptic_long_press"
 
     private const val DEFAULT_FOLDER_NAME = "Downloads/Videx"
 
@@ -245,6 +253,21 @@ object SettingsManager {
     private val _useDynamicColors = MutableStateFlow(true)
     val useDynamicColors: StateFlow<Boolean> = _useDynamicColors
 
+    private val _hapticEnabled = MutableStateFlow(true)
+    val hapticEnabled: StateFlow<Boolean> = _hapticEnabled
+
+    private val _hapticIntensity = MutableStateFlow(HapticIntensity.STANDARD)
+    val hapticIntensity: StateFlow<HapticIntensity> = _hapticIntensity
+
+    private val _hapticButtons = MutableStateFlow(true)
+    val hapticButtons: StateFlow<Boolean> = _hapticButtons
+
+    private val _hapticPlayer = MutableStateFlow(true)
+    val hapticPlayer: StateFlow<Boolean> = _hapticPlayer
+
+    private val _hapticLongPress = MutableStateFlow(true)
+    val hapticLongPress: StateFlow<Boolean> = _hapticLongPress
+
     private val _appTheme = MutableStateFlow(AppTheme.SYSTEM)
     val appTheme: StateFlow<AppTheme> = _appTheme
 
@@ -347,6 +370,13 @@ object SettingsManager {
         _maxParallelDownloads.value = prefs?.getInt(KEY_MAX_PARALLEL_DOWNLOADS, 1) ?: 1
 
         _useDynamicColors.value = prefs?.getBoolean(KEY_DYNAMIC_COLORS, true) ?: true
+        _hapticEnabled.value = prefs?.getBoolean(KEY_HAPTIC_ENABLED, true) ?: true
+        val hapticStr = prefs?.getString(KEY_HAPTIC_INTENSITY, HapticIntensity.STANDARD.name) ?: HapticIntensity.STANDARD.name
+        _hapticIntensity.value = try { HapticIntensity.valueOf(hapticStr) } catch (_: Exception) { HapticIntensity.STANDARD }
+        _hapticButtons.value = prefs?.getBoolean(KEY_HAPTIC_BUTTONS, true) ?: true
+        _hapticPlayer.value = prefs?.getBoolean(KEY_HAPTIC_PLAYER, true) ?: true
+        _hapticLongPress.value = prefs?.getBoolean(KEY_HAPTIC_LONG_PRESS, true) ?: true
+
         val themeStr = prefs?.getString(KEY_APP_THEME, AppTheme.SYSTEM.name) ?: AppTheme.SYSTEM.name
         _appTheme.value = try { AppTheme.valueOf(themeStr) } catch (_: Exception) { AppTheme.SYSTEM }
         val globalActionStr = prefs?.getString(KEY_SHARE_GLOBAL_ACTION, ShareActionGlobal.PREVIEW.name) ?: ShareActionGlobal.PREVIEW.name
@@ -622,6 +652,31 @@ object SettingsManager {
         prefs?.edit()?.putBoolean(KEY_DYNAMIC_COLORS, value)?.apply()
     }
 
+    fun setHapticEnabled(value: Boolean) {
+        _hapticEnabled.value = value
+        prefs?.edit()?.putBoolean(KEY_HAPTIC_ENABLED, value)?.apply()
+    }
+
+    fun setHapticIntensity(intensity: HapticIntensity) {
+        _hapticIntensity.value = intensity
+        prefs?.edit()?.putString(KEY_HAPTIC_INTENSITY, intensity.name)?.apply()
+    }
+
+    fun setHapticButtons(value: Boolean) {
+        _hapticButtons.value = value
+        prefs?.edit()?.putBoolean(KEY_HAPTIC_BUTTONS, value)?.apply()
+    }
+
+    fun setHapticPlayer(value: Boolean) {
+        _hapticPlayer.value = value
+        prefs?.edit()?.putBoolean(KEY_HAPTIC_PLAYER, value)?.apply()
+    }
+
+    fun setHapticLongPress(value: Boolean) {
+        _hapticLongPress.value = value
+        prefs?.edit()?.putBoolean(KEY_HAPTIC_LONG_PRESS, value)?.apply()
+    }
+
     fun setAppTheme(theme: AppTheme) {
         _appTheme.value = theme
         prefs?.edit()?.putString(KEY_APP_THEME, theme.name)?.apply()
@@ -707,6 +762,82 @@ object SettingsManager {
             val updated = ((current * 0.8) + (newSpeedBps * 0.2)).toLong()
             _avgSpeedMobile.value = updated
             prefs?.edit()?.putLong(KEY_AVG_SPEED_MOBILE, updated)?.apply()
+        }
+    }
+}
+
+fun android.view.View?.performAppHaptic(type: HapticType = HapticType.CLICK) {
+    if (this == null) return
+    if (!SettingsManager.hapticEnabled.value) return
+
+    val intensity = SettingsManager.hapticIntensity.value
+
+    when (type) {
+        HapticType.CLICK -> {
+            if (!SettingsManager.hapticButtons.value) return
+            when (intensity) {
+                HapticIntensity.SOFT -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1)
+                        android.view.HapticFeedbackConstants.TEXT_HANDLE_MOVE
+                    else android.view.HapticFeedbackConstants.KEYBOARD_TAP
+                )
+                HapticIntensity.STANDARD -> performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                HapticIntensity.STRONG -> performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            }
+        }
+        HapticType.LONG_PRESS -> {
+            if (!SettingsManager.hapticLongPress.value) return
+            when (intensity) {
+                HapticIntensity.SOFT -> performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                HapticIntensity.STANDARD -> performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+                HapticIntensity.STRONG -> performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            }
+        }
+        HapticType.PLAYER_GESTURE -> {
+            if (!SettingsManager.hapticPlayer.value) return
+            when (intensity) {
+                HapticIntensity.SOFT -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1)
+                        android.view.HapticFeedbackConstants.TEXT_HANDLE_MOVE
+                    else android.view.HapticFeedbackConstants.KEYBOARD_TAP
+                )
+                HapticIntensity.STANDARD -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
+                        android.view.HapticFeedbackConstants.CLOCK_TICK
+                    else android.view.HapticFeedbackConstants.KEYBOARD_TAP
+                )
+                HapticIntensity.STRONG -> performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            }
+        }
+        HapticType.SUCCESS -> {
+            when (intensity) {
+                HapticIntensity.SOFT -> performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                HapticIntensity.STANDARD -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R)
+                        android.view.HapticFeedbackConstants.CONFIRM
+                    else android.view.HapticFeedbackConstants.VIRTUAL_KEY
+                )
+                HapticIntensity.STRONG -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R)
+                        android.view.HapticFeedbackConstants.CONFIRM
+                    else android.view.HapticFeedbackConstants.VIRTUAL_KEY
+                )
+            }
+        }
+        HapticType.SELECTION -> {
+            when (intensity) {
+                HapticIntensity.SOFT -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1)
+                        android.view.HapticFeedbackConstants.TEXT_HANDLE_MOVE
+                    else android.view.HapticFeedbackConstants.KEYBOARD_TAP
+                )
+                HapticIntensity.STANDARD -> performHapticFeedback(
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
+                        android.view.HapticFeedbackConstants.CLOCK_TICK
+                    else android.view.HapticFeedbackConstants.KEYBOARD_TAP
+                )
+                HapticIntensity.STRONG -> performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            }
         }
     }
 }

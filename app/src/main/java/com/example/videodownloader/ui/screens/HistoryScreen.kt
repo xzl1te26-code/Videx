@@ -1,7 +1,8 @@
 package com.example.videodownloader.ui.screens
 
 import android.net.Uri
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -515,7 +516,7 @@ fun HistoryScreen(
                         },
                         navigationIcon = {
                             IconButton(onClick = {
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                view.performAppHaptic(HapticType.CLICK)
                                 isSelectionMode = false
                                 selectedItems = emptySet()
                             }) {
@@ -525,7 +526,7 @@ fun HistoryScreen(
                         actions = {
                             IconButton(
                                 onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     HistoryManager.shareMultipleFiles(context, fileList.filter { selectedItems.contains(it.id) })
                                 },
                                 enabled = selectedItems.isNotEmpty()
@@ -538,7 +539,7 @@ fun HistoryScreen(
                             }
                             IconButton(
                                 onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     showMultiDeleteDialog = true
                                 },
                                 enabled = selectedItems.isNotEmpty()
@@ -551,7 +552,7 @@ fun HistoryScreen(
                             }
                             IconButton(
                                 onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     selectedItems = if (selectedItems.size == filteredFileList.size) emptySet() else filteredFileList.map { it.id }.toSet()
                                 }
                             ) {
@@ -594,7 +595,7 @@ fun HistoryScreen(
                                     }
                                 }
                                 IconButton(onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     isSelectionMode = true
                                 }) {
                                     Icon(Icons.Default.Checklist, contentDescription = "Выбрать")
@@ -719,7 +720,7 @@ fun HistoryScreen(
                             showHistoryThumbnails = showHistoryThumbnails,
                             onCardClick = {
                                 if (isSelectionMode) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    view.performAppHaptic(HapticType.CLICK)
                                     selectedItems = if (selectedItems.contains(item.id)) selectedItems - item.id else selectedItems + item.id
                                 } else if (item.isMissing) {
                                     fileToPrune = item
@@ -733,7 +734,7 @@ fun HistoryScreen(
                             },
                             onCardLongClick = {
                                 if (!isSelectionMode) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                                    view.performAppHaptic(HapticType.LONG_PRESS)
                                     isSelectionMode = true
                                     selectedItems = selectedItems + item.id
                                 }
@@ -975,7 +976,7 @@ private fun HistoryItemCard(
                 Checkbox(
                     checked = isSelected,
                     onCheckedChange = {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        view.performAppHaptic(HapticType.CLICK)
                         onCheckboxChange(it)
                     },
                     colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)

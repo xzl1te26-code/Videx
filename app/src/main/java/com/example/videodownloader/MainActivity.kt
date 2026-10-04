@@ -479,7 +479,7 @@ fun RequestNotificationPermission() {
     }
 }
 
-enum class Screen { Home, History, Settings, Logs, About, ShareRules, SpeedSettings, Accounts, WebViewLogin, NotifSettings, Player, PlayerSettings, Gallery, AudioPlayer, AppearanceSettings, StorageSettings, TipFramesSettings }
+enum class Screen { Home, History, Settings, Logs, About, ShareRules, SpeedSettings, Accounts, WebViewLogin, NotifSettings, Player, PlayerSettings, Gallery, AudioPlayer, AppearanceSettings, StorageSettings, TipFramesSettings, HapticSettings }
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -527,6 +527,8 @@ fun AppNavigation(
                 Screen.PlayerSettings -> Screen.Settings
                 Screen.AppearanceSettings -> Screen.Settings
                 Screen.StorageSettings -> Screen.Settings
+                Screen.HapticSettings -> Screen.AppearanceSettings
+                Screen.TipFramesSettings -> Screen.AppearanceSettings
                 Screen.Gallery -> Screen.History
                 Screen.AudioPlayer -> Screen.History
                 else -> Screen.Home
@@ -724,9 +726,13 @@ fun AppNavigation(
                         )
                         Screen.AppearanceSettings -> com.example.videodownloader.ui.screens.settings.AppearanceSettingsScreen(
                             onBack = { mainViewModel.currentScreen = Screen.Settings },
-                            onOpenTipFramesSettings = { mainViewModel.currentScreen = Screen.TipFramesSettings }
+                            onOpenTipFramesSettings = { mainViewModel.currentScreen = Screen.TipFramesSettings },
+                            onOpenHapticSettings = { mainViewModel.currentScreen = Screen.HapticSettings }
                         )
                         Screen.TipFramesSettings -> com.example.videodownloader.ui.screens.settings.TipFramesSettingsScreen(
+                            onBack = { mainViewModel.currentScreen = Screen.AppearanceSettings }
+                        )
+                        Screen.HapticSettings -> com.example.videodownloader.ui.screens.settings.HapticSettingsScreen(
                             onBack = { mainViewModel.currentScreen = Screen.AppearanceSettings }
                         )
                         Screen.StorageSettings -> com.example.videodownloader.ui.screens.settings.StorageSettingsScreen(

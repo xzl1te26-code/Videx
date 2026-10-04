@@ -1,6 +1,7 @@
 package com.example.videodownloader.ui.screens.settings
 
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -398,7 +399,7 @@ fun SpeedSettingsScreen(onBack: () -> Unit) {
                                     .clip(RoundedCornerShape(12.dp))
                                     .clickable {
                                         if (isMobile) {
-                                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                            view.performAppHaptic(HapticType.CLICK)
                                             selectedProfile = NetworkProfile.WIFI
                                         }
                                     },
@@ -421,7 +422,7 @@ fun SpeedSettingsScreen(onBack: () -> Unit) {
                                     .clip(RoundedCornerShape(12.dp))
                                     .clickable {
                                         if (!isMobile) {
-                                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                            view.performAppHaptic(HapticType.CLICK)
                                             selectedProfile = NetworkProfile.MOBILE
                                         }
                                     },

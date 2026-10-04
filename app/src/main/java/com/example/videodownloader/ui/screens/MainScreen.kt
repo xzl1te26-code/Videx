@@ -2,7 +2,8 @@ package com.example.videodownloader.ui.screens
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -443,7 +444,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                            view.performAppHaptic(HapticType.CLICK)
                                             AnalysisManager.setUrl(clipUrl)
                                             focusManager.clearFocus()
                                         }
@@ -582,7 +583,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 // Эстетичная парящая кнопка закрытия в углу с мягкой круглой подложкой
                                 Surface(
                                     onClick = {
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        view.performAppHaptic(HapticType.CLICK)
                                         viewModel.dismissedClipboardUrl = clipUrl
                                     },
                                     modifier = Modifier

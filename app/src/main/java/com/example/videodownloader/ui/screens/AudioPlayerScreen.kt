@@ -7,7 +7,8 @@ import android.app.NotificationManager
 import android.app.NotificationChannel
 import android.app.Notification
 import android.net.Uri
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
@@ -213,7 +214,7 @@ fun AudioPlayerScreen(
 
     // 🍎 Apple Music / Spotify Двойной тап перемотки / Предыдущий трек
     fun playPreviousOrRestart() {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        view.performAppHaptic(HapticType.CLICK)
         val currentPos = exoPlayer.currentPosition
         val now = System.currentTimeMillis()
         if (currentPos > 3000L && (now - lastPrevClickTime > 2000L)) {
@@ -231,7 +232,7 @@ fun AudioPlayerScreen(
     }
 
     fun playNextTrack() {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        view.performAppHaptic(HapticType.CLICK)
         if (exoPlayer.hasNextMediaItem()) {
             exoPlayer.seekToNextMediaItem()
         } else {
@@ -449,7 +450,7 @@ fun AudioPlayerScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    view.performAppHaptic(HapticType.CLICK)
                     onBack()
                 }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
@@ -465,14 +466,14 @@ fun AudioPlayerScreen(
                 )
 
                 IconButton(onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    view.performAppHaptic(HapticType.CLICK)
                     HistoryManager.shareFile(context, currentItem)
                 }) {
                     Icon(Icons.Default.Share, contentDescription = "Поделиться", tint = Color.White.copy(alpha = 0.9f))
                 }
 
                 IconButton(onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    view.performAppHaptic(HapticType.CLICK)
                     showDeleteDialog = true
                 }) {
                     Icon(Icons.Default.DeleteOutline, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.error)
@@ -618,7 +619,7 @@ fun AudioPlayerScreen(
                         exoPlayer.seekTo(targetPos)
                         position = targetPos
                         isDragging = false
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        view.performAppHaptic(HapticType.PLAYER_GESTURE)
                     },
                     colors = SliderDefaults.colors(
                         thumbColor = Color.White,
@@ -645,7 +646,7 @@ fun AudioPlayerScreen(
                     // 🔁 Кнопка цикла (Repeat)
                     IconButton(
                         onClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            view.performAppHaptic(HapticType.CLICK)
                             isRepeatOne = !isRepeatOne
                             exoPlayer.repeatMode = if (isRepeatOne) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                         }
@@ -669,7 +670,7 @@ fun AudioPlayerScreen(
                     // ⏯️ Воспроизведение / Пауза
                     Surface(
                         onClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            view.performAppHaptic(HapticType.CLICK)
                             if (isPlaying) exoPlayer.pause() else exoPlayer.play()
                         },
                         shape = CircleShape,
@@ -698,7 +699,7 @@ fun AudioPlayerScreen(
                     // ⚡️ Переключатель скорости (1.0x -> 1.25x -> 1.5x -> 2.0x)
                     Surface(
                         onClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            view.performAppHaptic(HapticType.CLICK)
                             speedIndex = (speedIndex + 1) % speedOptions.size
                             exoPlayer.setPlaybackSpeed(speedOptions[speedIndex])
                         },

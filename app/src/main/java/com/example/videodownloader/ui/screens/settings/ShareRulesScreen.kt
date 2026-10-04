@@ -1,6 +1,7 @@
 package com.example.videodownloader.ui.screens.settings
 
-import android.view.HapticFeedbackConstants
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -299,7 +300,7 @@ fun ShareRulesScreen(onBack: () -> Unit) {
 
                                                             Surface(
                                                                 onClick = {
-                                                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                                                    view.performAppHaptic(HapticType.CLICK)
                                                                     SettingsManager.toggleTransitPlatform(name)
                                                                 },
                                                                 modifier = Modifier.weight(1f).height(52.dp).graphicsLayer(scaleX = scale, scaleY = scale),
@@ -417,7 +418,7 @@ fun PlatformRuleBottomSheet(
                 subtitle = stringResource(R.string.rule_video_photo_subtitle),
                 selected = currentRule == PlatformDownloadRule.VIDEO,
                 onClick = { 
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    view.performAppHaptic(HapticType.CLICK)
                     onRuleSelect(PlatformDownloadRule.VIDEO) 
                 }
             )
@@ -429,7 +430,7 @@ fun PlatformRuleBottomSheet(
                     subtitle = stringResource(R.string.rule_audio_only_subtitle),
                     selected = currentRule == PlatformDownloadRule.AUDIO,
                     onClick = { 
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        view.performAppHaptic(HapticType.CLICK)
                         onRuleSelect(PlatformDownloadRule.AUDIO) 
                     }
                 )
@@ -441,7 +442,7 @@ fun PlatformRuleBottomSheet(
                 subtitle = stringResource(R.string.rule_preview_subtitle),
                 selected = currentRule == PlatformDownloadRule.PREVIEW_ONLY,
                 onClick = { 
-                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    view.performAppHaptic(HapticType.CLICK)
                     onRuleSelect(PlatformDownloadRule.PREVIEW_ONLY) 
                 }
             )

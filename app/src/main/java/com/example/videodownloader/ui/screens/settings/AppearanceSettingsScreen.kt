@@ -56,7 +56,8 @@ fun getIconForFrameKey(key: String): ImageVector {
 @Composable
 fun AppearanceSettingsScreen(
     onBack: () -> Unit,
-    onOpenTipFramesSettings: () -> Unit
+    onOpenTipFramesSettings: () -> Unit,
+    onOpenHapticSettings: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -116,6 +117,45 @@ fun AppearanceSettingsScreen(
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             stateFlow = SettingsManager.useDynamicColors,
                             onCheckedChange = { SettingsManager.setUseDynamicColors(it) }
+                        )
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    text = "ТАКТИЛЬНЫЙ ОТКЛИК",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)),
+                    border = com.example.videodownloader.ui.theme.getAppCardBorder()
+                ) {
+                    Column {
+                        val hapticEnabled by SettingsManager.hapticEnabled.collectAsState()
+                        val hapticIntensity by SettingsManager.hapticIntensity.collectAsState()
+                        val intensityText = when(hapticIntensity) {
+                            com.example.videodownloader.HapticIntensity.SOFT -> "Мягкая сила"
+                            com.example.videodownloader.HapticIntensity.STANDARD -> "Стандартная сила"
+                            com.example.videodownloader.HapticIntensity.STRONG -> "Сильная отдача"
+                        }
+
+                        SettingsNavigationRow(
+                            title = "Тактильный отклик (Вибрация)",
+                            subtitle = if (hapticEnabled) "Включен • $intensityText" else "Выключен",
+                            icon = Icons.Default.Vibration,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = onOpenHapticSettings
                         )
                     }
                 }

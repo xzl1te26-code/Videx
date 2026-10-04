@@ -1,6 +1,8 @@
 package com.example.videodownloader.ui.screens
 
 import android.content.Context
+import com.example.videodownloader.performAppHaptic
+import com.example.videodownloader.HapticType
 import android.media.AudioManager
 import android.net.Uri
 import kotlinx.coroutines.isActive
@@ -431,6 +433,7 @@ fun PlayerScreen(
                     onDoubleTap = { offset ->
                         if (isInPip) return@detectTapGestures
                         resetControlsTimer()
+                        view.performAppHaptic(HapticType.PLAYER_GESTURE)
                         val isRight = offset.x > size.width / 2
                         val seekTime = 10000L
                         if (isRight) {
@@ -508,6 +511,7 @@ fun PlayerScreen(
                                     gestureType = type
                                     gestureValue = newValue
                                     showGestureIndicator = true
+                                    view.performAppHaptic(HapticType.PLAYER_GESTURE)
 
                                     if (type == GestureType.Brightness) {
                                         val lp = activity?.window?.attributes

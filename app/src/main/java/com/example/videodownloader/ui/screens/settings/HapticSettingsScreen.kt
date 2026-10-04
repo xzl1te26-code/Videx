@@ -2,11 +2,8 @@ package com.example.videodownloader.ui.screens.settings
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,15 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.videodownloader.*
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,23 +26,8 @@ fun HapticSettingsScreen(onBack: () -> Unit) {
     val hapticEnabled by SettingsManager.hapticEnabled.collectAsState()
     val hapticIntensity by SettingsManager.hapticIntensity.collectAsState()
 
-    var triggerPulse by remember { mutableIntStateOf(0) }
-    val pulseScale by animateFloatAsState(
-        targetValue = if (triggerPulse > 0) 1.25f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
-        label = "pulseScale"
-    )
-
-    LaunchedEffect(triggerPulse) {
-        if (triggerPulse > 0) {
-            delay(150)
-            triggerPulse = 0
-        }
-    }
-
     fun fireHaptic(type: HapticType) {
         localView.performAppHaptic(type)
-        triggerPulse++
     }
 
     Scaffold(
@@ -74,81 +53,13 @@ fun HapticSettingsScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val outerAlpha by animateFloatAsState(
-                                targetValue = if (triggerPulse > 0) 0.35f else 0f,
-                                animationSpec = tween(200),
-                                label = "outerAlpha"
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(86.dp)
-                                    .scale(pulseScale * 1.15f)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = outerAlpha))
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .size(68.dp)
-                                    .scale(pulseScale)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (hapticEnabled) Icons.Default.Vibration else Icons.Default.PortableWifiOff,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(34.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Text(
-                            text = if (hapticEnabled) "Отклик активен" else "Вибрация отключена",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-
-                        Text(
-                            text = if (hapticEnabled) "Нажмите на любой вариант ниже для проверки силы" else "Включите тактильный отклик для настройки интенсивности",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                }
-            }
-
-            item {
                 Text(
                     text = "ОБЩИЕ НАСТРОЙКИ",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.sp,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp)
                 )
             }
 
@@ -205,7 +116,7 @@ fun HapticSettingsScreen(onBack: () -> Unit) {
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Выберите желаемую силу тактильной отдачи:",
+                                    text = "Выберите уровень отдачи (нажмите для проверки):",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -264,8 +175,8 @@ fun HapticSettingsScreen(onBack: () -> Unit) {
                         ) {
                             Column {
                                 SettingsSwitchRow(
-                                    title = "Кнопки и переключатели",
-                                    subtitle = "Вибрация при нажатии на кнопки, ссылки и вкладки",
+                                    title = "Кнопки и элементы UI",
+                                    subtitle = "Вибрация при нажатии на кнопки, ссылки и переключатели",
                                     icon = Icons.Default.TouchApp,
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -294,8 +205,8 @@ fun HapticSettingsScreen(onBack: () -> Unit) {
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                 SettingsSwitchRow(
-                                    title = "Долгое нажатие и зажатие",
-                                    subtitle = "Вибрация при вызове контекстных меню и копировании",
+                                    title = "Долгое зажатие и выделение",
+                                    subtitle = "Вибрация при вызове контекстных меню и выделении списка",
                                     icon = Icons.Default.Gesture,
                                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

@@ -26,7 +26,7 @@ object AppUpdateChecker {
 
     private const val GITHUB_OWNER = "xzl1te26-code"
     private const val GITHUB_REPO = "Videx"
-    private const val CURRENT_VERSION_NAME = "1.0.0"
+    private const val CURRENT_VERSION_NAME = "1.0.1"
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)

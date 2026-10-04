@@ -45,6 +45,16 @@ object AppUpdateChecker {
         }
     }
 
+    fun getApkFileVersion(context: Context, apkFile: File): String? {
+        return try {
+            val pm = context.packageManager
+            val info = pm.getPackageArchiveInfo(apkFile.absolutePath, 0)
+            info?.versionName
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun checkForUpdates(context: Context): Result<AppUpdateInfo> = withContext(Dispatchers.IO) {
         try {
             val url = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
@@ -111,7 +121,7 @@ object AppUpdateChecker {
             .trim()
     }
 
-    private fun isVersionNewer(latest: String, current: String): Boolean {
+    fun isVersionNewer(latest: String, current: String): Boolean {
         if (latest.isBlank()) return false
         val latestParts = latest.split(".").mapNotNull { it.toIntOrNull() }
         val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
@@ -137,14 +147,16 @@ object AppUpdateChecker {
             val safeVersion = latestVersion.ifBlank { "latest" }
             val apkFile = File(context.cacheDir, "videx_update_$safeVersion.apk")
 
-            // Если версия совпадает и файл уже скачан (> 1 МБ) — берем готовый из кэша
-            if (!forceRedownload && apkFile.exists() && apkFile.length() > 1024 * 1024L) {
-                AsyncLogger.log(LogLevel.INFO, "Используем готовый APK из кэша: ${apkFile.name} (${apkFile.length() / (1024 * 1024)} МБ)")
+            // 🛡️ Проверяем РЕАЛЬНУЮ версию внутри APK файла перед повторным использованием кэша!
+            val cachedApkVersion = getApkFileVersion(context, apkFile)
+            if (!forceRedownload && apkFile.exists() && apkFile.length() > 1024 * 1024L && cachedApkVersion == latestVersion) {
+                AsyncLogger.log(LogLevel.INFO, "Используем валидный APK из кэша (Версия $cachedApkVersion)")
                 onProgress(1.0f)
                 pendingInstallFile = apkFile
                 return@withContext Result.success(apkFile)
             }
 
+            // Если версия в кэше не совпадает или устарела — удаляем старый файл
             if (apkFile.exists()) apkFile.delete()
 
             val request = Request.Builder()
@@ -183,6 +195,18 @@ object AppUpdateChecker {
 
     fun promptInstallApk(context: Context, apkFile: File) {
         try {
+            // 🛡️ ПРОВЕРКА ВЕРСИИ: Убеждаемся, что скачанный APK РЕАЛЬНО новее установленной версии!
+            val apkVersion = getApkFileVersion(context, apkFile)
+            val currentVersion = getInstalledVersionName(context)
+
+            if (apkVersion != null && !isVersionNewer(apkVersion, currentVersion)) {
+                AsyncLogger.log(LogLevel.WARN, "Пропуск установки: Версия в APK ($apkVersion) не новее установленной ($currentVersion)")
+                apkFile.delete()
+                pendingInstallFile = null
+                userRedirectedToSettings = false
+                return
+            }
+
             pendingInstallFile = apkFile
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
@@ -221,9 +245,16 @@ object AppUpdateChecker {
 
             val file = pendingInstallFile ?: return
             if (file.exists() && file.length() > 1024 * 1024L) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.canRequestPackageInstalls()) {
-                    AsyncLogger.log(LogLevel.INFO, "Автоматический запуск установки APK после получения прав")
-                    promptInstallApk(context, file)
+                val apkVersion = getApkFileVersion(context, file)
+                val currentVersion = getInstalledVersionName(context)
+                if (apkVersion != null && isVersionNewer(apkVersion, currentVersion)) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.canRequestPackageInstalls()) {
+                        AsyncLogger.log(LogLevel.INFO, "Автоматический запуск установки APK после получения прав")
+                        promptInstallApk(context, file)
+                    }
+                } else {
+                    file.delete()
+                    pendingInstallFile = null
                 }
             }
         } catch (e: Exception) {

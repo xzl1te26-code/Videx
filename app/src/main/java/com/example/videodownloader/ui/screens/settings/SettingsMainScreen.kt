@@ -238,6 +238,10 @@ fun SettingsMainScreen(
                     border = com.example.videodownloader.ui.theme.getAppCardBorder()
                 ) {
                     Column {
+                        AppUpdateRow(snackbarHostState)
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
                         OtaUpdateRow(snackbarHostState)
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -334,6 +338,121 @@ fun DiskSpaceControlRow(onClick: () -> Unit) {
         onClick = onClick,
         trailingIcon = Icons.Default.ExpandMore
     )
+}
+
+@Composable
+fun AppUpdateRow(snackbarHostState: SnackbarHostState) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isChecking by remember { mutableStateOf(false) }
+    var updateInfo by remember { mutableStateOf<com.example.videodownloader.logic.AppUpdateInfo?>(null) }
+    var downloadProgress by remember { mutableFloatStateOf(-1f) }
+
+    if (updateInfo != null && updateInfo!!.hasUpdate) {
+        val info = updateInfo!!
+        AlertDialog(
+            onDismissRequest = { if (downloadProgress < 0f) updateInfo = null },
+            title = { Text("Обновление Videx v${info.latestVersion}", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (downloadProgress >= 0f) {
+                        Text("Загрузка APK... ${(downloadProgress * 100).toInt()}%")
+                        LinearProgressIndicator(
+                            progress = { downloadProgress },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Text("Доступна новая версия приложения Videx!", style = MaterialTheme.typography.bodyMedium)
+                        if (info.releaseNotes.isNotBlank()) {
+                            Text("Что нового:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(info.releaseNotes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (downloadProgress < 0f) {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                downloadProgress = 0f
+                                val res = com.example.videodownloader.logic.AppUpdateChecker.downloadAndInstallApk(
+                                    context,
+                                    info.downloadUrl
+                                ) { prog -> downloadProgress = prog }
+
+                                downloadProgress = -1f
+                                if (res.isSuccess) {
+                                    val apkFile = res.getOrThrow()
+                                    com.example.videodownloader.logic.AppUpdateChecker.promptInstallApk(context, apkFile)
+                                    updateInfo = null
+                                } else {
+                                    snackbarHostState.showInstantSnackbar("Ошибка загрузки обновления")
+                                    updateInfo = null
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Обновить")
+                    }
+                }
+            },
+            dismissButton = {
+                if (downloadProgress < 0f) {
+                    TextButton(onClick = { updateInfo = null }) {
+                        Text("Отмена")
+                    }
+                }
+            }
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .clickable {
+                if (!isChecking) {
+                    isChecking = true
+                    coroutineScope.launch {
+                        val result = com.example.videodownloader.logic.AppUpdateChecker.checkForUpdates()
+                        isChecking = false
+                        if (result.isSuccess) {
+                            val info = result.getOrThrow()
+                            if (info.hasUpdate) {
+                                updateInfo = info
+                            } else {
+                                snackbarHostState.showInstantSnackbar("У вас установлена последняя версия Videx (v${info.latestVersion})")
+                            }
+                        } else {
+                            snackbarHostState.showInstantSnackbar("Не удалось проверить обновления")
+                        }
+                    }
+                }
+            }
+            .padding(16.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.GetApp, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Обновление приложения", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Text("Проверить новые версии Videx на GitHub", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        if (isChecking) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        }
+    }
 }
 
 @Composable

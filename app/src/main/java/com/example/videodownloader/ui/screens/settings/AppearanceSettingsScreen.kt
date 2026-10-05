@@ -261,15 +261,166 @@ fun AppearanceSettingsScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                        SettingsSwitchRow(
-                            title = "Свайп вниз для синхронизации",
-                            subtitle = "Синхронизация истории с памятью жестом свайпа сверху вниз",
-                            icon = Icons.Default.SwipeDown,
+                        var showSyncModeDialog by remember { mutableStateOf(false) }
+                        val historySyncMode by SettingsManager.historySyncMode.collectAsState()
+                        val syncModeSubtitle = when (historySyncMode) {
+                            com.example.videodownloader.HistorySyncMode.BOTH -> "Кнопка и свайп вниз"
+                            com.example.videodownloader.HistorySyncMode.SWIPE_ONLY -> "Только свайп вниз"
+                            com.example.videodownloader.HistorySyncMode.BUTTON_ONLY -> "Только кнопка в шапке"
+                        }
+
+                        SettingsNavigationRow(
+                            title = "Способ синхронизации",
+                            subtitle = syncModeSubtitle,
+                            icon = Icons.Default.Sync,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            stateFlow = SettingsManager.enableHistoryPullToRefresh,
-                            onCheckedChange = { SettingsManager.setEnableHistoryPullToRefresh(it) }
+                            onClick = { showSyncModeDialog = true }
                         )
+
+                        if (showSyncModeDialog) {
+                            val syncOptions = listOf(
+                                Triple(com.example.videodownloader.HistorySyncMode.BOTH, "Кнопка и свайп вниз", "Доступны и иконка [🔄] в шапке, и свайп по экрану"),
+                                Triple(com.example.videodownloader.HistorySyncMode.SWIPE_ONLY, "Только свайп вниз", "Иконка [🔄] скрывается из шапки, обновление жестом"),
+                                Triple(com.example.videodownloader.HistorySyncMode.BUTTON_ONLY, "Только кнопка в шапке", "Классический режим обновления кнопкой (без свайпа)")
+                            )
+
+                            ModalBottomSheet(
+                                onDismissRequest = { showSyncModeDialog = false },
+                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                                dragHandle = {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(vertical = 10.dp)
+                                            .width(36.dp)
+                                            .height(4.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                                    )
+                                }
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp)
+                                        .padding(bottom = 28.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Sync,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(14.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Способ синхронизации",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                            Text(
+                                                text = "Выберите варианты запуска обновления Истории",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                                    syncOptions.forEach { (mode, title, subtitle) ->
+                                        val isSelected = historySyncMode == mode
+                                        val icon = when (mode) {
+                                            com.example.videodownloader.HistorySyncMode.BOTH -> Icons.Default.Sync
+                                            com.example.videodownloader.HistorySyncMode.SWIPE_ONLY -> Icons.Default.SwipeDown
+                                            com.example.videodownloader.HistorySyncMode.BUTTON_ONLY -> Icons.Default.TouchApp
+                                        }
+
+                                        Surface(
+                                            onClick = {
+                                                SettingsManager.setHistorySyncMode(mode)
+                                                showSyncModeDialog = false
+                                            },
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        icon,
+                                                        contentDescription = null,
+                                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(14.dp))
+
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = title,
+                                                        fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = subtitle,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(12.dp))
+
+                                                RadioButton(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        SettingsManager.setHistorySyncMode(mode)
+                                                        showSyncModeDialog = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Button(
+                                        onClick = { showSyncModeDialog = false },
+                                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                                        shape = RoundedCornerShape(14.dp)
+                                    ) {
+                                        Text("Готово", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 

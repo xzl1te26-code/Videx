@@ -288,7 +288,7 @@ fun HistoryScreen(
 
     val showHistoryThumbnails by SettingsManager.showHistoryThumbnails.collectAsState()
     val showHistorySort by SettingsManager.showHistorySort.collectAsState()
-    val enableHistoryPullToRefresh by SettingsManager.enableHistoryPullToRefresh.collectAsState()
+    val historySyncMode by SettingsManager.historySyncMode.collectAsState()
 
     val showStorageStats by SettingsManager.showStorageStats.collectAsState()
     val useInternalPlayer by SettingsManager.useInternalPlayer.collectAsState()
@@ -708,18 +708,20 @@ fun HistoryScreen(
                         title = { Text("История", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold) },
                         actions = {
                             if (fileList.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    coroutineScope.launch {
-                                        isScanning = true
-                                        HistoryManager.syncWithStorage(context)
-                                        isScanning = false
-                                        snackbarHostState.showInstantSnackbar("Синхронизация завершена")
-                                    }
-                                }, enabled = !isScanning) {
-                                    if (isScanning) {
-                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                    } else {
-                                        Icon(Icons.Default.Sync, contentDescription = "Синхронизировать с памятью")
+                                if (historySyncMode == com.example.videodownloader.HistorySyncMode.BOTH || historySyncMode == com.example.videodownloader.HistorySyncMode.BUTTON_ONLY) {
+                                    IconButton(onClick = {
+                                        coroutineScope.launch {
+                                            isScanning = true
+                                            HistoryManager.syncWithStorage(context)
+                                            isScanning = false
+                                            snackbarHostState.showInstantSnackbar("Синхронизация завершена")
+                                        }
+                                    }, enabled = !isScanning) {
+                                        if (isScanning) {
+                                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        } else {
+                                            Icon(Icons.Default.Sync, contentDescription = "Синхронизировать с памятью")
+                                        }
                                     }
                                 }
                                 if (missingCount > 0) {
@@ -763,7 +765,8 @@ fun HistoryScreen(
         PullToRefreshBox(
             isRefreshing = isScanning,
             onRefresh = {
-                if (enableHistoryPullToRefresh && !isSelectionMode && !isScanning) {
+                val allowSwipe = historySyncMode == com.example.videodownloader.HistorySyncMode.BOTH || historySyncMode == com.example.videodownloader.HistorySyncMode.SWIPE_ONLY
+                if (allowSwipe && !isSelectionMode && !isScanning) {
                     coroutineScope.launch {
                         isScanning = true
                         HistoryManager.syncWithStorage(context)

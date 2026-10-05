@@ -62,13 +62,14 @@ fun TipFramesSettingsScreen(
     // Предпросмотр кадров
     var previewIndex by remember { mutableIntStateOf(0) }
     var isPreviewPlaying by remember { mutableStateOf(true) }
+    val tipAnimationSpeedMs by SettingsManager.tipAnimationSpeedMs.collectAsState()
 
-    LaunchedEffect(tipFrames, isPreviewPlaying) {
+    LaunchedEffect(tipFrames, isPreviewPlaying, tipAnimationSpeedMs) {
         if (isPreviewPlaying && tipFrames.isNotEmpty()) {
             while (true) {
                 for (i in tipFrames.indices) {
                     previewIndex = i
-                    delay(2200)
+                    delay(tipAnimationSpeedMs)
                 }
             }
         }

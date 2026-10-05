@@ -17,7 +17,7 @@
     <!-- About Screen -->
     <string name="about_title">О приложении</string>
     <string name="ytdlp_embedded_core">Встроенное ядро</string>
-    <string name="app_version_info">Версия 1.0.7 • Production Build</string>
+    <string name="app_version_info">Версия 1.0.8 • Production Build</string>
     <string name="about_features_header">ОСОБЕННОСТИ И ВОЗМОЖНОСТИ</string>
     <string name="feature_quality_title">Максимальное качество HD / 4K</string>
     <string name="feature_quality_desc">Умный выбор лучшего видеопотока и битрейта аудио без сжатия.</string>

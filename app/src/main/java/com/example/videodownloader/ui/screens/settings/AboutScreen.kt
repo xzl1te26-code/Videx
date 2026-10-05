@@ -92,7 +92,7 @@ fun AboutScreen(onBack: () -> Unit) {
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Ключевой функционал Videx v1.0.7",
+                            text = "Ключевой функционал Videx v1.0.8",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

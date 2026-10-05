@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 enum class ShareActionGlobal { PREVIEW, AUTOPILOT }
 enum class PlatformDownloadRule { VIDEO, AUDIO, PREVIEW_ONLY }
-enum class FileNameTemplate { TITLE_PLATFORM, DATE_TITLE }
+enum class FileNameTemplate { TITLE_PLATFORM, DATE_TITLE, TITLE_ONLY, PLATFORM_TITLE, DATE_TIME_TITLE }
 enum class MinDiskSpace(val bytes: Long) { NONE(0L), MB500(500L * 1024 * 1024), GB1(1024L * 1024 * 1024) }
 enum class AppTheme { SYSTEM, DARK, LIGHT }
 enum class HistoryTitleMode { TWO_LINES, MARQUEE, SINGLE_LINE }

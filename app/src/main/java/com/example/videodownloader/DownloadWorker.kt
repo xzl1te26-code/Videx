@@ -171,6 +171,19 @@ class DownloadWorker(
                     val cleanTitle = downloadTitle.replace(Regex("[\\\\/*?:\"<>|]"), "").trim().take(50)
                     if (cleanTitle.isEmpty()) "${dateStr}_video" else "${dateStr}_$cleanTitle"
                 }
+                FileNameTemplate.TITLE_ONLY -> {
+                    val cleanTitle = downloadTitle.replace(Regex("[\\\\/*?:\"<>|]"), "").trim().take(50)
+                    if (cleanTitle.isEmpty()) "video_$platform" else cleanTitle
+                }
+                FileNameTemplate.PLATFORM_TITLE -> {
+                    val cleanTitle = downloadTitle.replace(Regex("[\\\\/*?:\"<>|]"), "").trim().take(50)
+                    if (cleanTitle.isEmpty()) "[$platform] video" else "[$platform] $cleanTitle"
+                }
+                FileNameTemplate.DATE_TIME_TITLE -> {
+                    val dateTimeStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
+                    val cleanTitle = downloadTitle.replace(Regex("[\\\\/*?:\"<>|]"), "").trim().take(50)
+                    if (cleanTitle.isEmpty()) "${dateTimeStr}_video" else "${dateTimeStr}_$cleanTitle"
+                }
             }
         }
 

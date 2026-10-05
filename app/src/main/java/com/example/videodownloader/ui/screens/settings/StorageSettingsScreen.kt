@@ -62,7 +62,10 @@ fun StorageSettingsScreen(
         val fileNameTemplate by SettingsManager.fileNameTemplate.collectAsState()
         val templateOptions = listOf(
             Triple(FileNameTemplate.TITLE_PLATFORM, "Название - Платформа", "Напр: Видео - YouTube.mp4" to "STD"),
-            Triple(FileNameTemplate.DATE_TITLE, "Дата_Название", "Напр: 20240830_Видео.mp4" to "DATE")
+            Triple(FileNameTemplate.TITLE_ONLY, "Только Название", "Напр: Видео.mp4" to "TITLE"),
+            Triple(FileNameTemplate.PLATFORM_TITLE, "[Платформа] Название", "Напр: [YouTube] Видео.mp4" to "TAG"),
+            Triple(FileNameTemplate.DATE_TITLE, "Дата_Название", "Напр: 20261005_Видео.mp4" to "DATE"),
+            Triple(FileNameTemplate.DATE_TIME_TITLE, "Дата_Время_Название", "Напр: 20261005_1830_Видео.mp4" to "TIME")
         )
 
         AlertDialog(
@@ -73,7 +76,13 @@ fun StorageSettingsScreen(
                     templateOptions.forEach { (tmpl, title, info) ->
                         val (subtitle, badge) = info
                         val isSelected = fileNameTemplate == tmpl
-                        val icon = if (tmpl == FileNameTemplate.TITLE_PLATFORM) Icons.Default.TextFields else Icons.Default.Event
+                        val icon = when (tmpl) {
+                            FileNameTemplate.TITLE_PLATFORM -> Icons.Default.TextFields
+                            FileNameTemplate.TITLE_ONLY -> Icons.Default.ShortText
+                            FileNameTemplate.PLATFORM_TITLE -> Icons.Default.Label
+                            FileNameTemplate.DATE_TITLE -> Icons.Default.Event
+                            FileNameTemplate.DATE_TIME_TITLE -> Icons.Default.Schedule
+                        }
 
                         Surface(
                             shape = RoundedCornerShape(16.dp),

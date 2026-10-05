@@ -305,6 +305,9 @@ fun FileNameTemplateRow(onClick: () -> Unit) {
     val tmplText = when(fileNameTemplate) {
         FileNameTemplate.TITLE_PLATFORM -> "Название - Платформа"
         FileNameTemplate.DATE_TITLE -> "Дата_Название"
+        FileNameTemplate.TITLE_ONLY -> "Только Название"
+        FileNameTemplate.PLATFORM_TITLE -> "[Платформа] Название"
+        FileNameTemplate.DATE_TIME_TITLE -> "Дата_Время_Название"
     }
     SettingsNavigationRow(
         title = stringResource(R.string.filename_template_title),

@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -278,49 +279,147 @@ fun AppearanceSettingsScreen(
                         )
 
                         if (showTitleModeDialog) {
-                            AlertDialog(
+                            val modeOptions = listOf(
+                                Triple(com.example.videodownloader.HistoryTitleMode.TWO_LINES, "Две строки (Рекомендуется)", "Перенос длинных названий до 2 строк"),
+                                Triple(com.example.videodownloader.HistoryTitleMode.MARQUEE, "Бегущая строка", "Плавная анимированная прокрутка в 1 строку"),
+                                Triple(com.example.videodownloader.HistoryTitleMode.SINGLE_LINE, "Одна строка", "Сжатие длинного названия троеточием")
+                            )
+
+                            ModalBottomSheet(
                                 onDismissRequest = { showTitleModeDialog = false },
-                                title = { Text("Названия файлов в Истории", fontWeight = FontWeight.Bold) },
-                                text = {
-                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        listOf(
-                                            com.example.videodownloader.HistoryTitleMode.TWO_LINES to ("Две строки" to "Перенос названия до 2 строк"),
-                                            com.example.videodownloader.HistoryTitleMode.MARQUEE to ("Бегущая строка" to "Анимированная прокрутка в 1 строку"),
-                                            com.example.videodownloader.HistoryTitleMode.SINGLE_LINE to ("Одна строка" to "Сжатый вид с троеточием")
-                                        ).forEach { (mode, info) ->
-                                            val (title, desc) = info
-                                            val isSelected = historyTitleMode == mode
-                                            Surface(
-                                                shape = RoundedCornerShape(16.dp),
-                                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable {
-                                                    SettingsManager.setHistoryTitleMode(mode)
-                                                    showTitleModeDialog = false
-                                                }
+                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                                dragHandle = {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(vertical = 10.dp)
+                                            .width(36.dp)
+                                            .height(4.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                                    )
+                                }
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp)
+                                        .padding(bottom = 28.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.secondaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Title,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(14.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Названия файлов в Истории",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                            Text(
+                                                text = "Выберите режим отображения длинных заголовков",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                                    modeOptions.forEach { (mode, title, subtitle) ->
+                                        val isSelected = historyTitleMode == mode
+                                        val icon = when (mode) {
+                                            com.example.videodownloader.HistoryTitleMode.TWO_LINES -> Icons.Default.WrapText
+                                            com.example.videodownloader.HistoryTitleMode.MARQUEE -> Icons.Default.FastForward
+                                            com.example.videodownloader.HistoryTitleMode.SINGLE_LINE -> Icons.Default.ShortText
+                                        }
+
+                                        Surface(
+                                            onClick = {
+                                                SettingsManager.setHistoryTitleMode(mode)
+                                                showTitleModeDialog = false
+                                            },
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Row(
-                                                    modifier = Modifier.padding(14.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                                    contentAlignment = Alignment.Center
                                                 ) {
-                                                    Column(modifier = Modifier.weight(1f)) {
-                                                        Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                                        Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                    }
-                                                    RadioButton(selected = isSelected, onClick = {
+                                                    Icon(
+                                                        icon,
+                                                        contentDescription = null,
+                                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(14.dp))
+
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = title,
+                                                        fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = subtitle,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(12.dp))
+
+                                                RadioButton(
+                                                    selected = isSelected,
+                                                    onClick = {
                                                         SettingsManager.setHistoryTitleMode(mode)
                                                         showTitleModeDialog = false
-                                                    })
-                                                }
+                                                    }
+                                                )
                                             }
                                         }
                                     }
-                                },
-                                confirmButton = {},
-                                dismissButton = {
-                                    TextButton(onClick = { showTitleModeDialog = false }) { Text("Закрыть") }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Button(
+                                        onClick = { showTitleModeDialog = false },
+                                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                                        shape = RoundedCornerShape(14.dp)
+                                    ) {
+                                        Text("Готово", fontWeight = FontWeight.Bold)
+                                    }
                                 }
-                            )
+                            }
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))

@@ -819,8 +819,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
         }
 
         item {
+            // Если есть ошибка - убираем плашку анализа/результата. Иначе, если ссылка валидна (анализируется или загружена) - показываем её.
             AnimatedVisibility(
-                visible = (isCurrentUrlValid && (isAnalyzing || resultTitle.isNotBlank())) || isDownloading,
+                visible = errorMessage.isBlank() && ((isCurrentUrlValid && (isAnalyzing || resultTitle.isNotBlank())) || isDownloading),
                 enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) + fadeIn() + scaleIn(initialScale = 0.95f),
                 exit = shrinkVertically() + fadeOut() + scaleOut(targetScale = 0.95f)
             ) {

@@ -197,7 +197,7 @@ fun SettingsMainScreen(
                 ) {
                     Column {
                         SettingsNavigationRow(
-                            title = "Интерфейс и внешний вид",
+                            title = "Оформление",
                             subtitle = "Цвета Material You, селектор качества, превью, виджеты",
                             icon = Icons.Default.Palette,
                             containerColor = MaterialTheme.colorScheme.primaryContainer,

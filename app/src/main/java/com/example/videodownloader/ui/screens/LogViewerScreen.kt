@@ -3,6 +3,7 @@ package com.example.videodownloader.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.videodownloader.*
+import com.example.videodownloader.logic.AppUpdateChecker
 import com.example.videodownloader.utils.exportAndShareLogs
 import com.example.videodownloader.utils.exportSmartDiagnosticReport
 import kotlinx.coroutines.launch
@@ -159,9 +161,11 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
         )
     }
 
-    // 📱 TELEGRAM / iOS STYLE BOTTOM SHEET "ОТЧЕТ РАЗРАБОТЧИКУ"
+    // 📱 GOOGLE MATERIAL 3 STYLE BOTTOM SHEET "ОТЧЕТ РАЗРАБОТЧИКУ"
     if (showShareDialog) {
-        val lastError = remember(logs) { logs.lastOrNull { it.level == LogLevel.ERROR }?.message ?: "Сбоев в сессии не зафиксировано" }
+        val lastLog = remember(logs) { logs.lastOrNull()?.message ?: "Событий в сессии не зафиксировано" }
+        val currentVersion = remember(context) { AppUpdateChecker.getInstalledVersionName(context) }
+        val deviceInfo = remember { "${Build.MANUFACTURER} ${Build.MODEL} • Android ${Build.VERSION.RELEASE}" }
 
         ModalBottomSheet(
             onDismissRequest = { showShareDialog = false },
@@ -209,17 +213,17 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
                         Text(
                             text = "Отчёт разработчику",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Videx v1.0.0 • Ошибок: $errorCount • Записей: ${logs.size}",
+                            text = "Videx v$currentVersion • $deviceInfo",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // ТЕРМИНАЛЬНЫЙ СНИППЕТ В СТИЛЕ TELEGRAM
+                // КАРТОЧКА СТАТУСА СИСТЕМЫ И ПОСЛЕДНЕГО СОБЫТИЯ
                 Surface(
                     shape = RoundedCornerShape(18.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
@@ -227,31 +231,53 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(if (errorCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "ПОСЛЕДНЯЯ ЗАПИСЬ:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (errorCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                fontSize = 10.sp
-                            )
+                            Surface(
+                                shape = CircleShape,
+                                color = if (errorCount > 0) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = if (errorCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = if (errorCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = if (errorCount > 0) "Зафиксировано ошибок: $errorCount" else "Системы работают штатно",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (errorCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         Text(
-                            text = lastError,
+                            text = "ПОСЛЕДНЕЕ СОБЫТИЕ:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 10.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = lastLog,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 11.5.sp,
                                 lineHeight = 16.sp
                             ),
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 5,
+                            maxLines = 4,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -267,95 +293,98 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(16.dp),
+                        .height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Скопировать готовый отчёт", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("Скопировать готовый отчёт", fontWeight = FontWeight.Bold, fontSize = 14.5.sp)
                 }
 
                 // КНОПКА 2: ПОДЕЛИТЬСЯ ФАЙЛОМ
-                FilledTonalButton(
+                OutlinedButton(
                     onClick = {
                         exportAndShareLogs(context, logs, "Full")
                         showShareDialog = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Отправить файл логов", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("Поделиться файлом логов", fontWeight = FontWeight.Bold, fontSize = 14.5.sp)
                 }
             }
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Системные логи", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Box(modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)) {
-                            com.example.videodownloader.ui.components.RollingItemCounter(
-                                count = logs.size,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = 11.sp
-                            )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Системные логи", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)) {
+                                com.example.videodownloader.ui.components.RollingItemCounter(
+                                    count = logs.size,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
-                }
-            },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
-                }
-            },
-            actions = {
-                IconButton(
-                    onClick = {
-                        val text = logs.joinToString("\n") { "[${it.timestamp}] [${it.level.name}] ${it.message}" }
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Videx Logs", text))
-                        coroutineScope.launch { snackbarHostState.showSnackbar("Логи скопированы в буфер") }
-                    },
-                    enabled = logs.isNotEmpty()
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Копировать")
-                }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            val text = logs.joinToString("\n") { "[${it.timestamp}] [${it.level.name}] ${it.message}" }
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Videx Logs", text))
+                            coroutineScope.launch { snackbarHostState.showSnackbar("Логи скопированы в буфер") }
+                        },
+                        enabled = logs.isNotEmpty()
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Копировать")
+                    }
 
-                IconButton(
-                    onClick = { showShareDialog = true },
-                    enabled = logs.isNotEmpty()
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = "Экспорт отчета", tint = MaterialTheme.colorScheme.primary)
-                }
+                    IconButton(
+                        onClick = { showShareDialog = true },
+                        enabled = logs.isNotEmpty()
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = "Экспорт отчета", tint = MaterialTheme.colorScheme.primary)
+                    }
 
-                IconButton(
-                    onClick = { showClearDialog = true },
-                    enabled = logs.isNotEmpty()
-                ) {
-                    Icon(Icons.Default.DeleteOutline, contentDescription = "Очистить", tint = MaterialTheme.colorScheme.error)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.background
+                    IconButton(
+                        onClick = { showClearDialog = true },
+                        enabled = logs.isNotEmpty()
+                    ) {
+                        Icon(Icons.Default.DeleteOutline, contentDescription = "Очистить", tint = MaterialTheme.colorScheme.error)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                )
             )
-        )
-
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
             // 📅 ВЫБОР ДНЯ И ФИЛЬТР ОШИБОК

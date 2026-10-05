@@ -141,12 +141,21 @@ object AppUpdateChecker {
         return false
     }
 
+    private var activeDownloadCall: okhttp3.Call? = null
+
+    fun cancelCurrentDownload() {
+        try {
+            activeDownloadCall?.cancel()
+            activeDownloadCall = null
+        } catch (_: Exception) {}
+    }
+
     suspend fun downloadAndInstallApk(
         context: Context,
         apkUrl: String,
         latestVersion: String,
         forceRedownload: Boolean = false,
-        onProgress: (Float) -> Unit
+        onProgressDetailed: (progress: Float, downloadedBytes: Long, totalBytes: Long, speedBytes: Long) -> Unit
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
             val safeVersion = latestVersion.ifBlank { "latest" }
@@ -156,7 +165,8 @@ object AppUpdateChecker {
             val cachedApkVersion = getApkFileVersion(context, apkFile)
             if (!forceRedownload && apkFile.exists() && apkFile.length() > 1024 * 1024L && cachedApkVersion == latestVersion) {
                 AsyncLogger.log(LogLevel.INFO, "Используем валидный APK из кэша (Версия $cachedApkVersion)")
-                onProgress(1.0f)
+                val len = apkFile.length()
+                onProgressDetailed(1.0f, len, len, 0L)
                 pendingInstallFile = apkFile
                 return@withContext Result.success(apkFile)
             }
@@ -173,33 +183,54 @@ object AppUpdateChecker {
                 .header("User-Agent", "Android-Videx-App")
                 .build()
 
-            httpClient.newCall(request).execute().use { response ->
+            val call = httpClient.newCall(request)
+            activeDownloadCall = call
+
+            call.execute().use { response ->
                 if (!response.isSuccessful) throw Exception("Ошибка скачивания APK (${response.code})")
                 val body = response.body ?: throw Exception("Пустое тело ответа")
                 val contentLength = body.contentLength()
 
                 body.byteStream().use { input ->
                     FileOutputStream(apkFile).use { output ->
-                        val buffer = ByteArray(8 * 1024)
+                        val buffer = ByteArray(16 * 1024)
                         var bytesRead: Int
                         var totalRead = 0L
+                        var lastSpeedTime = System.currentTimeMillis()
+                        var lastSpeedBytes = 0L
+                        var currentSpeed = 0L
 
                         while (input.read(buffer).also { bytesRead = it } != -1) {
                             output.write(buffer, 0, bytesRead)
                             totalRead += bytesRead
-                            if (contentLength > 0) {
-                                onProgress(totalRead.toFloat() / contentLength)
+                            lastSpeedBytes += bytesRead
+
+                            val now = System.currentTimeMillis()
+                            val timeDiff = now - lastSpeedTime
+                            if (timeDiff >= 500) {
+                                currentSpeed = (lastSpeedBytes * 1000L) / timeDiff
+                                lastSpeedTime = now
+                                lastSpeedBytes = 0L
                             }
+
+                            val prog = if (contentLength > 0) totalRead.toFloat() / contentLength else 0f
+                            onProgressDetailed(prog, totalRead, contentLength, currentSpeed)
                         }
                     }
                 }
             }
 
+            activeDownloadCall = null
             pendingInstallFile = apkFile
             Result.success(apkFile)
         } catch (e: Exception) {
-            val userMsg = com.example.videodownloader.utils.translateNetworkError(e.message, "Ошибка скачивания файла обновления")
-            Result.failure(Exception(userMsg))
+            activeDownloadCall = null
+            if (e is java.io.IOException && e.message?.contains("Canceled", ignoreCase = true) == true) {
+                Result.failure(Exception("Загрузка отменена"))
+            } else {
+                val userMsg = com.example.videodownloader.utils.translateNetworkError(e.message, "Ошибка скачивания файла обновления")
+                Result.failure(Exception(userMsg))
+            }
         }
     }
 

@@ -35,6 +35,9 @@ fun AppUpdateDialog(
 
     var isDownloading by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableFloatStateOf(0f) }
+    var downloadedBytes by remember { mutableLongStateOf(0L) }
+    var totalBytes by remember { mutableLongStateOf(0L) }
+    var downloadSpeedBytes by remember { mutableLongStateOf(0L) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Dialog(
@@ -88,51 +91,96 @@ fun AppUpdateDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    val percent = (downloadProgress * 100).toInt().coerceIn(0, 100)
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Скачивание файла...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "$percent%",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    LinearProgressIndicator(
-                        progress = { downloadProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(CircleShape),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    Text(
-                        text = "Пожалуйста, не закрывайте приложение",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                        fontSize = 12.sp
-                    )
+                    // Карточка состояния загрузки
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            val percent = (downloadProgress * 100).toInt().coerceIn(0, 100)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Скачивание файла...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "$percent%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            LinearProgressIndicator(
+                                progress = { downloadProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(CircleShape),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val loadedStr = com.example.videodownloader.HistoryManager.formatBytes(downloadedBytes)
+                                val totalStr = if (totalBytes > 0) com.example.videodownloader.HistoryManager.formatBytes(totalBytes) else "..."
+                                val speedStr = if (downloadSpeedBytes > 0) "${com.example.videodownloader.HistoryManager.formatBytes(downloadSpeedBytes)}/с" else "..."
+
+                                Text(
+                                    text = "$loadedStr / $totalStr",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                )
+                                Text(
+                                    text = speedStr,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                AppUpdateChecker.cancelCurrentDownload()
+                                isDownloading = false
+                                errorMessage = null
+                            },
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.6f)
+                                .height(42.dp)
+                        ) {
+                            Text("Отмена", fontWeight = FontWeight.Bold)
+                        }
+                    }
 
                     if (errorMessage != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
@@ -256,7 +304,12 @@ fun AppUpdateDialog(
                                         context,
                                         updateInfo.downloadUrl,
                                         updateInfo.latestVersion
-                                    ) { prog -> downloadProgress = prog }
+                                    ) { prog, loaded, total, speed ->
+                                        downloadProgress = prog
+                                        downloadedBytes = loaded
+                                        totalBytes = total
+                                        downloadSpeedBytes = speed
+                                    }
 
                                     if (res.isSuccess) {
                                         val apkFile = res.getOrThrow()
@@ -265,7 +318,10 @@ fun AppUpdateDialog(
                                         onDismiss()
                                     } else {
                                         isDownloading = false
-                                        errorMessage = "Не удалось скачать файл обновления"
+                                        val err = res.exceptionOrNull()?.message
+                                        if (err != "Загрузка отменена") {
+                                            errorMessage = err ?: "Не удалось скачать файл обновления"
+                                        }
                                     }
                                 }
                             },

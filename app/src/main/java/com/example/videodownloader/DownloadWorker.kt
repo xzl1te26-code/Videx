@@ -79,6 +79,14 @@ class DownloadWorker(
         val thumbnailUrl = inputData.getString(KEY_THUMBNAIL)
         val passportPath = inputData.getString(KEY_PASSPORT) ?: ""
 
+        // Проверка сети перед стартом скачивания
+        if (!com.example.videodownloader.utils.isNetworkAvailable(context)) {
+            val errorMsg = "Отсутствует подключение к интернету"
+            AsyncLogger.log(LogLevel.ERROR, "DownloadWorker: $errorMsg")
+            showErrorNotification(title, errorMsg)
+            return@withContext ListenableWorker.Result.failure()
+        }
+
         // Параметры сети (Wi-Fi vs Mobile)
         val isWifi = com.example.videodownloader.utils.isWifiConnected(context)
         val threads = if (isWifi) SettingsManager.threadsWifi.value else SettingsManager.threadsMobile.value

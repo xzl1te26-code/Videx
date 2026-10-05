@@ -20,6 +20,10 @@ object OtaUpdater {
 
     suspend fun updateCore(context: Context): Result<String> = withContext(Dispatchers.IO) {
         try {
+            if (!com.example.videodownloader.utils.isNetworkAvailable(context)) {
+                return@withContext Result.failure(Exception("Отсутствует подключение к интернету"))
+            }
+
             AsyncLogger.log(LogLevel.INFO, "OTA: Проверка обновлений на GitHub...")
 
             // Получаем ТЕКУЩУЮ версию yt-dlp из Python (если он запущен)

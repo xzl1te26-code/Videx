@@ -57,6 +57,10 @@ object AppUpdateChecker {
 
     suspend fun checkForUpdates(context: Context): Result<AppUpdateInfo> = withContext(Dispatchers.IO) {
         try {
+            if (!com.example.videodownloader.utils.isNetworkAvailable(context)) {
+                throw Exception("Отсутствует подключение к интернету")
+            }
+
             val url = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
             val request = Request.Builder()
                 .url(url)
@@ -147,13 +151,17 @@ object AppUpdateChecker {
             val safeVersion = latestVersion.ifBlank { "latest" }
             val apkFile = File(context.cacheDir, "videx_update_$safeVersion.apk")
 
-            // 🛡️ Проверяем РЕАЛЬНУЮ версию внутри APK файла перед повторным использованием кэша!
+            // Если версия совпадает и файл уже скачан (> 1 МБ) — берем готовый из кэша
             val cachedApkVersion = getApkFileVersion(context, apkFile)
             if (!forceRedownload && apkFile.exists() && apkFile.length() > 1024 * 1024L && cachedApkVersion == latestVersion) {
                 AsyncLogger.log(LogLevel.INFO, "Используем валидный APK из кэша (Версия $cachedApkVersion)")
                 onProgress(1.0f)
                 pendingInstallFile = apkFile
                 return@withContext Result.success(apkFile)
+            }
+
+            if (!com.example.videodownloader.utils.isNetworkAvailable(context)) {
+                throw Exception("Отсутствует подключение к интернету для скачивания обновления")
             }
 
             // Если версия в кэше не совпадает или устарела — удаляем старый файл

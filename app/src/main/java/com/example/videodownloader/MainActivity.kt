@@ -614,19 +614,28 @@ fun AppNavigation(
         }
     }
 
+    val isDockActiveOnScreen = currentScreen in listOf(Screen.Home, Screen.History, Screen.Settings)
+    val effectiveDockVisible = isDockVisible && isDockActiveOnScreen
+    
     val dockTranslationY by animateDpAsState(
-        targetValue = if (isDockVisible) 0.dp else 120.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        targetValue = if (effectiveDockVisible) 0.dp else 120.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow),
         label = "DockHideAnim"
     )
 
     val navBarBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val extraDockMargin = if (navBarBottomPadding <= 24.dp) 2.dp else 8.dp
-    val isDockActiveOnScreen = isDockVisible && currentScreen in listOf(Screen.Home, Screen.History, Screen.Settings)
     val dynamicSnackbarBottomPadding by animateDpAsState(
-        targetValue = if (isDockActiveOnScreen) navBarBottomPadding + 52.dp + extraDockMargin else navBarBottomPadding + 4.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        targetValue = if (effectiveDockVisible) navBarBottomPadding + 52.dp + extraDockMargin else navBarBottomPadding + 4.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow),
         label = "DynamicSnackbarPadding"
+    )
+
+    val isMediaScreen = currentScreen in listOf(Screen.Player, Screen.Gallery, Screen.AudioPlayer)
+    val listScale by animateFloatAsState(
+        targetValue = if (isMediaScreen) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "ListScaleAnim"
     )
 
     Surface(
@@ -636,6 +645,10 @@ fun AppNavigation(
         Box(modifier = Modifier
             .fillMaxSize()
             .nestedScroll(nestedScrollConnection)
+            .graphicsLayer {
+                scaleX = listScale
+                scaleY = listScale
+            }
         ) {
         Scaffold(
             snackbarHost = {
@@ -671,36 +684,12 @@ fun AppNavigation(
                     targetState = currentScreen,
                     label = "ScreenTransition",
                     transitionSpec = {
-                        val mediaScreens = listOf(Screen.Player, Screen.Gallery, Screen.AudioPlayer)
-                        val mainTabs = listOf(Screen.Home, Screen.History, Screen.Settings)
-
-                        when {
-                            // Вход в медиаплеер или фотогалерею (Слайд снизу)
-                            targetState in mediaScreens -> {
-                                (slideInVertically(initialOffsetY = { it }, animationSpec = tween(320, easing = FastOutSlowInEasing)) + fadeIn(tween(200)))
-                                    .togetherWith(scaleOut(targetScale = 0.94f, animationSpec = tween(280)) + fadeOut(tween(200)))
-                            }
-                            // Выход из медиаплеера или галереи назад к спискам (Слайд вниз)
-                            initialState in mediaScreens -> {
-                                (scaleIn(initialScale = 0.94f, animationSpec = tween(280)) + fadeIn(tween(200)))
-                                    .togetherWith(slideOutVertically(targetOffsetY = { it }, animationSpec = tween(320, easing = FastOutSlowInEasing)) + fadeOut(tween(200)))
-                            }
-                            // Переключение между главными вкладками (Горизонтальный слайд)
-                            targetState in mainTabs && initialState in mainTabs -> {
-                                val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                                (slideInHorizontally(initialOffsetX = { (it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeIn(tween(200)))
-                                    .togetherWith(slideOutHorizontally(targetOffsetX = { (-it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeOut(tween(200)))
-                            }
-                            // Возврат ИЗ подэкранов назад в Настройки (Слайд вправо)
-                            initialState !in mainTabs && targetState in mainTabs -> {
-                                (slideInHorizontally(initialOffsetX = { -it / 3 }, animationSpec = tween(280)) + fadeIn(tween(200)))
-                                    .togetherWith(slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(280)) + fadeOut(tween(200)))
-                            }
-                            // Вход В подэкраны Настроек (Слайд влево)
-                            else -> {
-                                (slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(280)) + fadeIn(tween(200)))
-                                    .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(280)) + fadeOut(tween(200)))
-                            }
+                        if (targetState !in listOf(Screen.Home, Screen.History, Screen.Settings) || initialState !in listOf(Screen.Home, Screen.History, Screen.Settings)) {
+                            slideInVertically(initialOffsetY = { it }) + fadeIn() togetherWith slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                        } else {
+                            val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                            slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn() togetherWith
+                                    slideOutHorizontally(targetOffsetX = { -it * direction }) + fadeOut()
                         }
                     }
                 ) { screen ->
@@ -788,8 +777,8 @@ fun AppNavigation(
 
         AnimatedVisibility(
             visible = currentScreen == Screen.Player,
-            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + scaleIn(initialScale = 0.92f) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + scaleOut(targetScale = 0.92f) + fadeOut(),
+            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(),
             label = "PlayerFullscreenTransition"
         ) {
             selectedPlayerItem?.let { item ->
@@ -803,8 +792,8 @@ fun AppNavigation(
 
         AnimatedVisibility(
             visible = currentScreen == Screen.Gallery,
-            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + scaleIn(initialScale = 0.92f) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + scaleOut(targetScale = 0.92f) + fadeOut(),
+            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(),
             label = "GalleryFullscreenTransition"
         ) {
             selectedPlayerItem?.let { item ->
@@ -817,8 +806,8 @@ fun AppNavigation(
 
         AnimatedVisibility(
             visible = currentScreen == Screen.AudioPlayer,
-            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + scaleIn(initialScale = 0.92f) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + scaleOut(targetScale = 0.92f) + fadeOut(),
+            enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(),
             label = "AudioPlayerFullscreenTransition"
         ) {
             selectedPlayerItem?.let { item ->

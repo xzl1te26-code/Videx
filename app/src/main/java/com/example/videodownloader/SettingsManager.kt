@@ -38,6 +38,8 @@ object SettingsManager {
     private const val KEY_USE_IMPERSONATE = "use_impersonate"
     private const val KEY_USE_CLIPBOARD_BUBBLE = "use_clipboard_bubble"
     private const val KEY_USE_CLIPBOARD_PREVIEW = "use_clipboard_preview"
+    private const val KEY_USE_CLIPBOARD_HISTORY = "use_clipboard_history"
+    private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
     private const val KEY_PIP_ACTIONS_ENABLED = "pip_actions_enabled"
@@ -192,6 +194,12 @@ object SettingsManager {
     private val _useClipboardPreview = MutableStateFlow(true)
     val useClipboardPreview: StateFlow<Boolean> = _useClipboardPreview
 
+    private val _useClipboardHistory = MutableStateFlow(true)
+    val useClipboardHistory: StateFlow<Boolean> = _useClipboardHistory
+
+    private val _recentClipboardUrls = MutableStateFlow<List<String>>(emptyList())
+    val recentClipboardUrls: StateFlow<List<String>> = _recentClipboardUrls
+
     private val _showDynamicTips = MutableStateFlow(true)
     val showDynamicTips: StateFlow<Boolean> = _showDynamicTips
 
@@ -342,6 +350,11 @@ object SettingsManager {
         _useImpersonate.value = prefs?.getBoolean(KEY_USE_IMPERSONATE, true) ?: true
         _useClipboardBubble.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_BUBBLE, true) ?: true
         _useClipboardPreview.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_PREVIEW, true) ?: true
+        _useClipboardHistory.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_HISTORY, true) ?: true
+        val savedRecentUrls = prefs?.getString(KEY_RECENT_CLIPBOARD_URLS, null)
+        if (!savedRecentUrls.isNullOrBlank()) {
+            _recentClipboardUrls.value = savedRecentUrls.split(";;;").filter { it.isNotBlank() }.take(5)
+        }
         _showDynamicTips.value = prefs?.getBoolean(KEY_SHOW_DYNAMIC_TIPS, true) ?: true
 
         val encodedFrames = prefs?.getString(KEY_TIP_FRAMES_DATA, null)
@@ -725,6 +738,36 @@ object SettingsManager {
     fun setUseClipboardPreview(value: Boolean) {
         _useClipboardPreview.value = value
         prefs?.edit()?.putBoolean(KEY_USE_CLIPBOARD_PREVIEW, value)?.apply()
+    }
+
+    fun setUseClipboardHistory(value: Boolean) {
+        _useClipboardHistory.value = value
+        prefs?.edit()?.putBoolean(KEY_USE_CLIPBOARD_HISTORY, value)?.apply()
+    }
+
+    fun addRecentClipboardUrl(url: String) {
+        val trimmed = url.trim()
+        if (trimmed.isBlank()) return
+        val current = _recentClipboardUrls.value.toMutableList()
+        current.remove(trimmed)
+        current.add(0, trimmed)
+        val updated = current.take(5)
+        _recentClipboardUrls.value = updated
+        val encoded = updated.joinToString(";;;")
+        prefs?.edit()?.putString(KEY_RECENT_CLIPBOARD_URLS, encoded)?.apply()
+    }
+
+    fun removeRecentClipboardUrl(url: String) {
+        val current = _recentClipboardUrls.value.toMutableList()
+        current.remove(url)
+        _recentClipboardUrls.value = current
+        val encoded = current.joinToString(";;;")
+        prefs?.edit()?.putString(KEY_RECENT_CLIPBOARD_URLS, encoded)?.apply()
+    }
+
+    fun clearRecentClipboardUrls() {
+        _recentClipboardUrls.value = emptyList()
+        prefs?.edit()?.remove(KEY_RECENT_CLIPBOARD_URLS)?.apply()
     }
 
     fun setShowDynamicTips(value: Boolean) {

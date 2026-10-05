@@ -14,6 +14,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -80,10 +81,13 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
     val checkDuplicates by SettingsManager.checkDuplicates.collectAsState()
     val useClipboardBubble by SettingsManager.useClipboardBubble.collectAsState()
     val useClipboardPreview by SettingsManager.useClipboardPreview.collectAsState()
+    val useClipboardHistory by SettingsManager.useClipboardHistory.collectAsState()
+    val recentClipboardUrls by SettingsManager.recentClipboardUrls.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     var clipboardUrl by remember { mutableStateOf<String?>(null) }
     var clipboardMetadata by remember { mutableStateOf<VideoMetadata?>(null) }
+    var showRecentHistorySheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(clipboardUrl, useClipboardPreview) {
         val currentClip = clipboardUrl
@@ -135,6 +139,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         viewModel.dismissedClipboardUrl = null
                     }
                     clipboardUrl = extractedUrl
+                    SettingsManager.addRecentClipboardUrl(extractedUrl)
                 } else {
                     clipboardUrl = null
                 }
@@ -562,6 +567,39 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                         fontSize = 9.sp
                                                     )
                                                 }
+
+                                                if (useClipboardHistory && recentClipboardUrls.size > 1) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Surface(
+                                                        onClick = {
+                                                            view.performAppHaptic(HapticType.CLICK)
+                                                            showRecentHistorySheet = true
+                                                        },
+                                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                                        shape = CircleShape,
+                                                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                                    ) {
+                                                        Row(
+                                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Default.History,
+                                                                contentDescription = null,
+                                                                modifier = Modifier.size(11.dp),
+                                                                tint = MaterialTheme.colorScheme.primary
+                                                            )
+                                                            Spacer(modifier = Modifier.width(3.dp))
+                                                            Text(
+                                                                text = "${recentClipboardUrls.size}",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                fontSize = 9.5.sp
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
                                             Text(
                                                 text = "Смарт-детектор обнаружил ссылку",
@@ -983,6 +1021,171 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                 coroutineScope.launch { snackbarHostState.showInstantSnackbar("⚡ В очередь добавлено: ${items.size} ($typeStr)") }
             }
         )
+    }
+
+    if (showRecentHistorySheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showRecentHistorySheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Недавно скопированные ссылки",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Выберите ссылку для мгновенного анализа",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (recentClipboardUrls.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                SettingsManager.clearRecentClipboardUrls()
+                                showRecentHistorySheet = false
+                            }
+                        ) {
+                            Text("Очистить", color = MaterialTheme.colorScheme.error, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                if (recentClipboardUrls.isEmpty()) {
+                    Text(
+                        text = "История скопированных ссылок пуста",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.heightIn(max = 280.dp)
+                    ) {
+                        items(recentClipboardUrls) { itemUrl ->
+                            val itemPlatform = remember(itemUrl) { detectPlatformName(itemUrl) }
+                            Surface(
+                                onClick = {
+                                    view.performAppHaptic(HapticType.CLICK)
+                                    AnalysisManager.setUrl(itemUrl)
+                                    focusManager.clearFocus()
+                                    showRecentHistorySheet = false
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.size(32.dp),
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = when {
+                                                    itemPlatform.contains("YouTube", ignoreCase = true) -> Icons.Default.PlayArrow
+                                                    itemPlatform.contains("TikTok", ignoreCase = true) -> Icons.Default.MusicNote
+                                                    itemPlatform.contains("Instagram", ignoreCase = true) -> Icons.Default.PhotoLibrary
+                                                    else -> Icons.Default.Link
+                                                },
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = itemPlatform,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = itemUrl,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            SettingsManager.removeRecentClipboardUrl(itemUrl)
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = "Удалить",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Button(
+                    onClick = { showRecentHistorySheet = false },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Закрыть", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }
 

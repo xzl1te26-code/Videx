@@ -76,13 +76,6 @@ fun StorageSettingsScreen(
                     templateOptions.forEach { (tmpl, title, info) ->
                         val (subtitle, badge) = info
                         val isSelected = fileNameTemplate == tmpl
-                        val icon = when (tmpl) {
-                            FileNameTemplate.TITLE_PLATFORM -> Icons.Default.TextFields
-                            FileNameTemplate.TITLE_ONLY -> Icons.Default.ShortText
-                            FileNameTemplate.PLATFORM_TITLE -> Icons.Default.Label
-                            FileNameTemplate.DATE_TITLE -> Icons.Default.Event
-                            FileNameTemplate.DATE_TIME_TITLE -> Icons.Default.Schedule
-                        }
 
                         Surface(
                             shape = RoundedCornerShape(16.dp),
@@ -111,11 +104,8 @@ fun StorageSettingsScreen(
                                 Spacer(modifier = Modifier.width(14.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    }
+                                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
 

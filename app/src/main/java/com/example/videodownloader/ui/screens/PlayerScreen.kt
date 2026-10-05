@@ -1,6 +1,7 @@
 package com.example.videodownloader.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.ui.draw.scale
 import com.example.videodownloader.performAppHaptic
 import com.example.videodownloader.HapticType
@@ -1062,7 +1063,8 @@ fun TopPlayerBar(
                         color = if (isLandscape) Color.White else MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
                     )
                     val formatTag = currentVideo.name.substringAfterLast('.', "MP4").uppercase()
                     Text(

@@ -867,12 +867,16 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                                                     Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                                                         val displayQualityText = when (viewModel.selectedVideoQuality) {
-                                                            "best" -> "Авто (Best)"
-                                                            else -> {
-                                                                val q = viewModel.selectedVideoQuality.toIntOrNull() ?: 0
-                                                                if (q >= 720) "${viewModel.selectedVideoQuality}p HD"
-                                                                else "${viewModel.selectedVideoQuality}p"
-                                                            }
+                                                            "best" -> "Авто"
+                                                            "2160" -> "4K UHD"
+                                                            "1440" -> "2K QHD"
+                                                            "1080" -> "1080p HD"
+                                                            "720"  -> "720p HD"
+                                                            "480"  -> "480p"
+                                                            "360"  -> "360p"
+                                                            "240"  -> "240p"
+                                                            "144"  -> "144p"
+                                                            else -> "${viewModel.selectedVideoQuality}p"
                                                         }
                                                         Text(text = displayQualityText, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer, maxLines = 1, softWrap = false)
                                                         Spacer(modifier = Modifier.width(4.dp))

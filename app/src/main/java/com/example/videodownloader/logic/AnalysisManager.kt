@@ -94,6 +94,10 @@ object AnalysisManager {
 
     fun clearError() {
         _errorMessage.value = ""
+        // При закрытии ошибки принудительно повторяем анализ, если ссылка в поле ввода валидная
+        if (isValidUrl(_url.value)) {
+            startBackgroundAnalysis(_url.value)
+        }
     }
 
     private fun startBackgroundAnalysis(targetUrl: String) {

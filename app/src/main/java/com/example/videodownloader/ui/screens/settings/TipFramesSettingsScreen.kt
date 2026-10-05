@@ -29,7 +29,7 @@ import com.example.videodownloader.SettingsManager
 import com.example.videodownloader.TipFrameData
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TipFramesSettingsScreen(
     onBack: () -> Unit
@@ -96,7 +96,8 @@ fun TipFramesSettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.imePadding()
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier

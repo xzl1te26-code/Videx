@@ -463,6 +463,128 @@ fun HistoryScreen(
         )
     }
 
+    if (showSortMenu) {
+        ModalBottomSheet(
+            onDismissRequest = { showSortMenu = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Сортировка истории",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Выберите порядок отображения файлов",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                val sortOptions = listOf(
+                    com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST to ("Сначала новые" to Icons.Default.Schedule),
+                    com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST to ("Сначала старые" to Icons.Default.HistoryToggleOff),
+                    com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST to ("Сначала тяжелые" to Icons.Default.ArrowDownward),
+                    com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST to ("Сначала легкие" to Icons.Default.ArrowUpward),
+                    com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST to ("Самые длинные (Медиа)" to Icons.Default.PlayCircleOutline)
+                )
+
+                sortOptions.forEach { (order, uiData) ->
+                    val (title, icon) = uiData
+                    val isSelected = mainViewModel.historySortOrder == order
+                    
+                    Surface(
+                        onClick = {
+                            view.performAppHaptic(HapticType.CLICK)
+                            mainViewModel.historySortOrder = order
+                            showSortMenu = false
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f) else Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                icon,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = { showSortMenu = false },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Готово", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+
     if (showClearAllDialog) {
         AlertDialog(
             onDismissRequest = { showClearAllDialog = false },
@@ -607,36 +729,11 @@ fun HistoryScreen(
                                 }
 
                                 if (showHistorySort) {
-                                    Box {
-                                        IconButton(onClick = { showSortMenu = true }) {
-                                            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Сортировка")
-                                        }
-                                        DropdownMenu(
-                                            expanded = showSortMenu,
-                                            onDismissRequest = { showSortMenu = false },
-                                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-                                        ) {
-                                            DropdownMenuItem(
-                                                text = { Text("Сначала новые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST) FontWeight.Bold else FontWeight.Normal) },
-                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST; showSortMenu = false }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Сначала старые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST) FontWeight.Bold else FontWeight.Normal) },
-                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST; showSortMenu = false }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Сначала тяжелые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST) FontWeight.Bold else FontWeight.Normal) },
-                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST; showSortMenu = false }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Сначала легкие", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST) FontWeight.Bold else FontWeight.Normal) },
-                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST; showSortMenu = false }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Самые длинные (Медиа)", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST) FontWeight.Bold else FontWeight.Normal) },
-                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST; showSortMenu = false }
-                                            )
-                                        }
+                                    IconButton(onClick = { 
+                                        view.performAppHaptic(HapticType.CLICK)
+                                        showSortMenu = true 
+                                    }) {
+                                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Сортировка")
                                     }
                                 }
 

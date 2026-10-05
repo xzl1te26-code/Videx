@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.videodownloader.CacheManager
@@ -61,11 +62,11 @@ fun StorageSettingsScreen(
     if (showTemplateDialog) {
         val fileNameTemplate by SettingsManager.fileNameTemplate.collectAsState()
         val templateOptions = listOf(
-            Triple(FileNameTemplate.TITLE_PLATFORM, "Название - Платформа", "Напр: Видео - YouTube.mp4" to "STD"),
-            Triple(FileNameTemplate.TITLE_ONLY, "Только Название", "Напр: Видео.mp4" to "TITLE"),
-            Triple(FileNameTemplate.PLATFORM_TITLE, "[Платформа] Название", "Напр: [YouTube] Видео.mp4" to "TAG"),
-            Triple(FileNameTemplate.DATE_TITLE, "Дата_Название", "Напр: 20261005_Видео.mp4" to "DATE"),
-            Triple(FileNameTemplate.DATE_TIME_TITLE, "Дата_Время_Название", "Напр: 20261005_1830_Видео.mp4" to "TIME")
+            Triple(FileNameTemplate.TITLE_PLATFORM, "Название и сервис", "Пример: Видео - YouTube.mp4"),
+            Triple(FileNameTemplate.TITLE_ONLY, "Только название", "Пример: Видео.mp4"),
+            Triple(FileNameTemplate.PLATFORM_TITLE, "Сервис и название", "Пример: [YouTube] Видео.mp4"),
+            Triple(FileNameTemplate.DATE_TITLE, "Дата и название", "Пример: 20261005_Видео.mp4"),
+            Triple(FileNameTemplate.DATE_TIME_TITLE, "Дата, время и название", "Пример: 20261005_1830_Видео.mp4")
         )
 
         AlertDialog(
@@ -73,9 +74,15 @@ fun StorageSettingsScreen(
             title = { Text(stringResource(R.string.filename_template_title), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    templateOptions.forEach { (tmpl, title, info) ->
-                        val (subtitle, badge) = info
+                    templateOptions.forEach { (tmpl, title, subtitle) ->
                         val isSelected = fileNameTemplate == tmpl
+                        val icon = when (tmpl) {
+                            FileNameTemplate.TITLE_PLATFORM -> Icons.Default.TextFields
+                            FileNameTemplate.TITLE_ONLY -> Icons.Default.ShortText
+                            FileNameTemplate.PLATFORM_TITLE -> Icons.Default.Label
+                            FileNameTemplate.DATE_TITLE -> Icons.Default.Event
+                            FileNameTemplate.DATE_TIME_TITLE -> Icons.Default.Schedule
+                        }
 
                         Surface(
                             shape = RoundedCornerShape(16.dp),
@@ -84,30 +91,45 @@ fun StorageSettingsScreen(
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { SettingsManager.setFileNameTemplate(tmpl); showTemplateDialog = false }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = badge,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        fontSize = 10.sp
+                                    Icon(
+                                        icon,
+                                        contentDescription = null,
+                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        text = title,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        text = subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
 
                                 RadioButton(selected = isSelected, onClick = { SettingsManager.setFileNameTemplate(tmpl); showTemplateDialog = false })
                             }

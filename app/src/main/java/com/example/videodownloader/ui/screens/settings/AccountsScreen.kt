@@ -140,12 +140,25 @@ fun AccountsScreen(
         )
     }
 
+    val hasAnyLoggedIn = remember(cookieStates) { cookieStates.values.any { it } }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.accounts_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_content_description)) } },
-                actions = { IconButton(onClick = { showLogoutDialog = true }) { Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.logout_all_content_description), tint = MaterialTheme.colorScheme.error) } },
+                actions = {
+                    IconButton(
+                        onClick = { showLogoutDialog = true },
+                        enabled = hasAnyLoggedIn
+                    ) {
+                        Icon(
+                            Icons.Default.DeleteSweep,
+                            contentDescription = stringResource(R.string.logout_all_content_description),
+                            tint = if (hasAnyLoggedIn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background, scrolledContainerColor = MaterialTheme.colorScheme.background)
             )
         }

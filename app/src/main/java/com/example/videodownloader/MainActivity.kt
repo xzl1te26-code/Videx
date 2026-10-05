@@ -26,6 +26,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -670,12 +671,31 @@ fun AppNavigation(
                     targetState = currentScreen,
                     label = "ScreenTransition",
                     transitionSpec = {
-                        if (targetState !in listOf(Screen.Home, Screen.History, Screen.Settings) || initialState !in listOf(Screen.Home, Screen.History, Screen.Settings)) {
-                            slideInVertically(initialOffsetY = { it }) + fadeIn() togetherWith slideOutVertically(targetOffsetY = { it }) + fadeOut()
-                        } else {
-                            val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                            slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn() togetherWith
-                                    slideOutHorizontally(targetOffsetX = { -it * direction }) + fadeOut()
+                        val mediaScreens = listOf(Screen.Player, Screen.Gallery, Screen.AudioPlayer)
+                        val mainTabs = listOf(Screen.Home, Screen.History, Screen.Settings)
+
+                        when {
+                            // Вход в медиаплеер или фотогалерею (Слайд снизу)
+                            targetState in mediaScreens -> {
+                                (slideInVertically(initialOffsetY = { it }, animationSpec = tween(320, easing = FastOutSlowInEasing)) + fadeIn(tween(200)))
+                                    .togetherWith(scaleOut(targetScale = 0.94f, animationSpec = tween(280)) + fadeOut(tween(200)))
+                            }
+                            // Выход из медиаплеера или галереи назад к спискам (Слайд вниз)
+                            initialState in mediaScreens -> {
+                                (scaleIn(initialScale = 0.94f, animationSpec = tween(280)) + fadeIn(tween(200)))
+                                    .togetherWith(slideOutVertically(targetOffsetY = { it }, animationSpec = tween(320, easing = FastOutSlowInEasing)) + fadeOut(tween(200)))
+                            }
+                            // Переключение между главными вкладками (Горизонтальный слайд)
+                            targetState in mainTabs && initialState in mainTabs -> {
+                                val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                                (slideInHorizontally(initialOffsetX = { (it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeIn(tween(200)))
+                                    .togetherWith(slideOutHorizontally(targetOffsetX = { (-it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeOut(tween(200)))
+                            }
+                            // Переход в подэкраны настроек (Горизонтальный слайд)
+                            else -> {
+                                (slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(280)) + fadeIn(tween(200)))
+                                    .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(280)) + fadeOut(tween(200)))
+                            }
                         }
                     }
                 ) { screen ->

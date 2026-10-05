@@ -156,9 +156,9 @@ fun AudioPlayerScreen(
 
     val audioIds = remember(audioList) { audioList.map { it.id } }
 
-    // Обновление плейлиста ExoPlayer при изменении треков
-    LaunchedEffect(audioIds) {
-        if (audioList.isNotEmpty()) {
+    // Обновление плейлиста ExoPlayer без перезапуска декодера при прослушивании
+    LaunchedEffect(audioIds.size) {
+        if (exoPlayer.mediaItemCount != audioList.size && audioList.isNotEmpty()) {
             val currentIndex = audioList.indexOfFirst { it.id == currentTrackId }.coerceAtLeast(0)
             val mediaItems = audioList.map { audioItem ->
                 val mediaMetadata = androidx.media3.common.MediaMetadata.Builder()
@@ -185,11 +185,7 @@ fun AudioPlayerScreen(
                     .build()
             }
 
-            val currentPos = exoPlayer.currentPosition
-            val isPlayingNow = exoPlayer.isPlaying
-            exoPlayer.setMediaItems(mediaItems, currentIndex, currentPos)
-            exoPlayer.prepare()
-            if (isPlayingNow) exoPlayer.play()
+            exoPlayer.setMediaItems(mediaItems, currentIndex, exoPlayer.currentPosition)
         }
     }
 

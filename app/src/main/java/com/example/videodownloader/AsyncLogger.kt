@@ -20,6 +20,7 @@ enum class LogLevel { INFO, WARN, ERROR, PERF }
 data class LogEntry(
     val id: String = UUID.randomUUID().toString(),
     val timestamp: String = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date()),
+    val dateStr: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
     val level: LogLevel,
     val message: String
 )
@@ -76,8 +77,9 @@ object AsyncLogger {
                             if (match != null) {
                                 val (fullDate, levelStr, msg) = match.destructured
                                 val timeOnly = if (fullDate.length >= 19) fullDate.substring(11, 19) else fullDate
+                                val datePart = if (fullDate.length >= 10) fullDate.substring(0, 10) else SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                                 val level = try { LogLevel.valueOf(levelStr) } catch (e: Exception) { LogLevel.INFO }
-                                loadedLogs.add(LogEntry(timestamp = timeOnly, level = level, message = msg))
+                                loadedLogs.add(LogEntry(timestamp = timeOnly, dateStr = datePart, level = level, message = msg))
                             }
                         }
                         _logs.value = loadedLogs

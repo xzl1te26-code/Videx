@@ -195,9 +195,9 @@ fun PlayerScreen(
             }
     }
 
-    // Обновление плейлиста при загрузке
-    LaunchedEffect(videoList) {
-        if (videoList.isNotEmpty()) {
+    // Обновление плейлиста без сброса текущего декодера при воспроизведении
+    LaunchedEffect(videoList.size) {
+        if (exoPlayer.mediaItemCount != videoList.size && videoList.isNotEmpty()) {
             val currentIndex = videoList.indexOfFirst { it.id == currentTrackId }.coerceAtLeast(0)
             val mediaItems = videoList.map { videoItem ->
                 val uri = if (videoItem.pathOrUri.startsWith("content://")) {
@@ -210,11 +210,7 @@ fun PlayerScreen(
                     .setUri(uri)
                     .build()
             }
-            val currentPos = exoPlayer.currentPosition
-            val isPlayingNow = exoPlayer.isPlaying
-            exoPlayer.setMediaItems(mediaItems, currentIndex, currentPos)
-            exoPlayer.prepare()
-            if (isPlayingNow) exoPlayer.play()
+            exoPlayer.setMediaItems(mediaItems, currentIndex, exoPlayer.currentPosition)
         }
     }
 

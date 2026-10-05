@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.res.stringResource
 import com.example.videodownloader.R
 
@@ -42,6 +43,14 @@ fun WebViewScreen(url: String, title: String, onBack: () -> Unit) {
     var errorOccurred by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
+
+    BackHandler {
+        if (webViewInstance?.canGoBack() == true) {
+            webViewInstance?.goBack()
+        } else {
+            onBack()
+        }
+    }
 
     Scaffold(
         topBar = {

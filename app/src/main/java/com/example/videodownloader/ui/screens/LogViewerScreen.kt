@@ -53,14 +53,27 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
 
     val errorCount = remember(logs) { logs.count { it.level == LogLevel.ERROR } }
 
-    val filteredLogs = remember(logs, isErrorsOnly, searchQuery) {
+    val todayDateStr = remember { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()) }
+    val yesterdayDateStr = remember {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -1)
+        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(cal.time)
+    }
+
+    val filteredLogs = remember(logs, isErrorsOnly, searchQuery, selectedDateFilter) {
         logs.filter { entry ->
             val matchesLevel = if (isErrorsOnly) entry.level == LogLevel.ERROR else true
             val matchesSearch = searchQuery.isBlank() ||
                     entry.message.contains(searchQuery, ignoreCase = true) ||
                     entry.timestamp.contains(searchQuery, ignoreCase = true)
 
-            matchesLevel && matchesSearch
+            val matchesDate = when (selectedDateFilter) {
+                "TODAY" -> entry.dateStr == todayDateStr
+                "YESTERDAY" -> entry.dateStr == yesterdayDateStr
+                else -> true
+            }
+
+            matchesLevel && matchesSearch && matchesDate
         }.reversed()
     }
 

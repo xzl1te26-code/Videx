@@ -58,10 +58,10 @@ fun ShareRulesScreen(onBack: () -> Unit) {
 
     if (activePlatformId != null) {
         val platformInfo = when (activePlatformId) {
-            "yt" -> Triple("YouTube / Shorts", Icons.Default.PlayCircle, ruleYoutube)
+            "yt" -> Triple("YouTube", Icons.Default.PlayCircle, ruleYoutube)
             "tt" -> Triple("TikTok", Icons.Default.MusicVideo, ruleTiktok)
-            "vk" -> Triple("VK Видео / Клипы", Icons.Default.SlowMotionVideo, ruleVk)
-            "ig" -> Triple("Instagram Reels", Icons.Default.CameraAlt, ruleInstagram)
+            "vk" -> Triple("VK Видео", Icons.Default.SlowMotionVideo, ruleVk)
+            "ig" -> Triple("Instagram", Icons.Default.CameraAlt, ruleInstagram)
             "pin" -> Triple("Pinterest", Icons.Default.PushPin, rulePinterest)
             else -> Triple(stringResource(R.string.all_other_sites), Icons.Default.Language, ruleOther)
         }
@@ -331,15 +331,15 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                             Text(stringResource(R.string.platform_rules_header), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp, modifier = Modifier.padding(start = 6.dp))
                             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)), border = com.example.videodownloader.ui.theme.getAppCardBorder()) {
                                 Column {
-                                    PlatformRowItem(name = "YouTube / Shorts", icon = Icons.Default.PlayCircle, iconColor = Color(0xFFFF0000), iconBg = Color(0xFFFF0000).copy(alpha = 0.15f), rule = ruleYoutube, isConflict = silentShareDownload && ruleYoutube == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "yt" })
+                                    PlatformRowItem(name = "YouTube", icon = Icons.Default.PlayCircle, iconColor = Color(0xFFFF0000), iconBg = Color(0xFFFF0000).copy(alpha = 0.15f), rule = ruleYoutube, isConflict = silentShareDownload && ruleYoutube == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "yt" })
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                    PlatformRowItem(name = "TikTok (Видео / Все Фото)", icon = Icons.Default.MusicVideo, iconColor = Color(0xFF00F2FE), iconBg = Color(0xFF00F2FE).copy(alpha = 0.15f), rule = ruleTiktok, isConflict = silentShareDownload && ruleTiktok == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "tt" })
+                                    PlatformRowItem(name = "TikTok", icon = Icons.Default.MusicVideo, iconColor = Color(0xFF00F2FE), iconBg = Color(0xFF00F2FE).copy(alpha = 0.15f), rule = ruleTiktok, isConflict = silentShareDownload && ruleTiktok == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "tt" })
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                    PlatformRowItem(name = "VK Видео / Клипы", icon = Icons.Default.SlowMotionVideo, iconColor = Color(0xFF0077FF), iconBg = Color(0xFF0077FF).copy(alpha = 0.15f), rule = ruleVk, isConflict = silentShareDownload && ruleVk == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "vk" })
+                                    PlatformRowItem(name = "VK Видео", icon = Icons.Default.SlowMotionVideo, iconColor = Color(0xFF0077FF), iconBg = Color(0xFF0077FF).copy(alpha = 0.15f), rule = ruleVk, isConflict = silentShareDownload && ruleVk == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "vk" })
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                    PlatformRowItem(name = "Instagram Reels", icon = Icons.Default.CameraAlt, iconColor = Color(0xFFE1306C), iconBg = Color(0xFFE1306C).copy(alpha = 0.15f), rule = ruleInstagram, isConflict = silentShareDownload && ruleInstagram == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "ig" })
+                                    PlatformRowItem(name = "Instagram", icon = Icons.Default.CameraAlt, iconColor = Color(0xFFE1306C), iconBg = Color(0xFFE1306C).copy(alpha = 0.15f), rule = ruleInstagram, isConflict = silentShareDownload && ruleInstagram == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "ig" })
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                    PlatformRowItem(name = "Pinterest (Видео / Фото)", icon = Icons.Default.PushPin, iconColor = Color(0xFFE60023), iconBg = Color(0xFFE60023).copy(alpha = 0.15f), rule = rulePinterest, isConflict = silentShareDownload && rulePinterest == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "pin" })
+                                    PlatformRowItem(name = "Pinterest", icon = Icons.Default.PushPin, iconColor = Color(0xFFE60023), iconBg = Color(0xFFE60023).copy(alpha = 0.15f), rule = rulePinterest, isConflict = silentShareDownload && rulePinterest == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "pin" })
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                                     PlatformRowItem(name = stringResource(R.string.all_other_sites), icon = Icons.Default.Language, iconColor = MaterialTheme.colorScheme.primary, iconBg = MaterialTheme.colorScheme.primaryContainer, rule = ruleOther, isConflict = silentShareDownload && ruleOther == PlatformDownloadRule.PREVIEW_ONLY, onClick = { activePlatformId = "other" })
                                 }

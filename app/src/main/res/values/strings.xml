@@ -12,7 +12,7 @@
     <string name="login_action">Войти</string>
     <string name="off_status">Выключено</string>
     <string name="disabled_status">Отключено</string>
-    <string name="all_other_sites">Все остальные сайты</string>
+    <string name="all_other_sites">Другие сайты</string>
 
     <!-- About Screen -->
     <string name="about_title">О приложении</string>
@@ -133,7 +133,7 @@
     <string name="stop_at_1gb">Останавливать при &lt; 1 ГБ</string>
     <string name="check_duplicates_title">Проверка повторов</string>
     <string name="check_duplicates_desc">Предупреждать о повторных загрузках</string>
-    <string name="interface_appearance_header">ИНТЕРФЕЙС И ВНЕШНИЙ ВИД</string>
+    <string name="interface_appearance_header">ОФОРМЛЕНИЕ</string>
     <string name="dynamic_colors_title">Динамические цвета</string>
     <string name="dynamic_colors_desc">Подстраивать интерфейс под цвета обоев</string>
     <string name="clipboard_bubble_title">Смарт-буфер</string>

@@ -19,6 +19,14 @@ import kotlinx.coroutines.launch
 import com.example.videodownloader.DownloadedFileItem
 import com.example.videodownloader.MediaType
 
+enum class HistorySortOrder {
+    NEWEST,          // Сначала новые (По умолчанию)
+    OLDEST,          // Сначала старые
+    SIZE_LARGEST,    // Сначала большие по весу
+    SIZE_SMALLEST,   // Сначала легкие по весу
+    DURATION_LONGEST // Самые длинные (для аудио/видео)
+}
+
 class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
     
     // Хранилище состояния истории
@@ -28,6 +36,7 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     // Состояние экрана истории
     var historySearchQuery by mutableStateOf("")
     var historySelectedTypeFilter by mutableStateOf<MediaType?>(null)
+    var historySortOrder by mutableStateOf(HistorySortOrder.NEWEST)
     
     // Состояние скролла списка истории
     var historyScrollIndex by mutableIntStateOf(0)

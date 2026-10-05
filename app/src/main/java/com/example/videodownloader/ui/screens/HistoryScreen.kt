@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -259,6 +260,7 @@ fun HistoryScreen(
     var fileToPrune by remember { mutableStateOf<DownloadedFileItem?>(null) }
     var showClearAllDialog by remember { mutableStateOf(false) }
     var showPruneAllDialog by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedItems by remember { mutableStateOf(setOf<String>()) }
@@ -284,6 +286,7 @@ fun HistoryScreen(
     }
 
     val showHistoryThumbnails by SettingsManager.showHistoryThumbnails.collectAsState()
+    val showHistorySort by SettingsManager.showHistorySort.collectAsState()
 
     val showStorageStats by SettingsManager.showStorageStats.collectAsState()
     val useInternalPlayer by SettingsManager.useInternalPlayer.collectAsState()
@@ -310,12 +313,20 @@ fun HistoryScreen(
     val audioCount = stats[2]
     val photoCount = stats[3]
 
-    val filteredFileList by remember(fileList, mainViewModel.historySelectedTypeFilter, mainViewModel.historySearchQuery) {
+    val filteredFileList by remember(fileList, mainViewModel.historySelectedTypeFilter, mainViewModel.historySearchQuery, mainViewModel.historySortOrder) {
         derivedStateOf {
             fileList.filter { item ->
                 val matchesType = mainViewModel.historySelectedTypeFilter == null || item.mediaType == mainViewModel.historySelectedTypeFilter
                 val matchesQuery = mainViewModel.historySearchQuery.isBlank() || item.name.contains(mainViewModel.historySearchQuery.trim(), ignoreCase = true)
                 matchesType && matchesQuery
+            }.let { filtered ->
+                when (mainViewModel.historySortOrder) {
+                    com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST -> filtered.sortedByDescending { it.timestamp }
+                    com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST -> filtered.sortedBy { it.timestamp }
+                    com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST -> filtered.sortedByDescending { it.sizeBytes }
+                    com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST -> filtered.sortedBy { it.sizeBytes }
+                    com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST -> filtered.sortedByDescending { it.durationMs }
+                }
             }
         }
     }
@@ -594,6 +605,41 @@ fun HistoryScreen(
                                         }
                                     }
                                 }
+
+                                if (showHistorySort) {
+                                    Box {
+                                        IconButton(onClick = { showSortMenu = true }) {
+                                            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Сортировка")
+                                        }
+                                        DropdownMenu(
+                                            expanded = showSortMenu,
+                                            onDismissRequest = { showSortMenu = false },
+                                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("Сначала новые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST) FontWeight.Bold else FontWeight.Normal) },
+                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.NEWEST; showSortMenu = false }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Сначала старые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST) FontWeight.Bold else FontWeight.Normal) },
+                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.OLDEST; showSortMenu = false }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Сначала тяжелые", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST) FontWeight.Bold else FontWeight.Normal) },
+                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_LARGEST; showSortMenu = false }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Сначала легкие", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST) FontWeight.Bold else FontWeight.Normal) },
+                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.SIZE_SMALLEST; showSortMenu = false }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Самые длинные (Медиа)", fontWeight = if (mainViewModel.historySortOrder == com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST) FontWeight.Bold else FontWeight.Normal) },
+                                                onClick = { mainViewModel.historySortOrder = com.example.videodownloader.viewmodel.HistorySortOrder.DURATION_LONGEST; showSortMenu = false }
+                                            )
+                                        }
+                                    }
+                                }
+
                                 IconButton(onClick = {
                                     view.performAppHaptic(HapticType.CLICK)
                                     isSelectionMode = true

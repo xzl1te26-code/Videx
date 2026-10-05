@@ -246,6 +246,18 @@ fun AppearanceSettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                         SettingsSwitchRow(
+                            title = "Умная сортировка истории",
+                            subtitle = "Удобные фильтры по дате, размеру файла и длительности видео",
+                            icon = Icons.Default.Sort,
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            stateFlow = SettingsManager.showHistorySort,
+                            onCheckedChange = { SettingsManager.setShowHistorySort(it) }
+                        )
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                        SettingsSwitchRow(
                             title = stringResource(R.string.storage_stats_title),
                             subtitle = stringResource(R.string.storage_stats_desc),
                             icon = Icons.Default.PieChart,

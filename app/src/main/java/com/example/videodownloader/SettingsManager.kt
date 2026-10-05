@@ -40,6 +40,7 @@ object SettingsManager {
     private const val KEY_USE_CLIPBOARD_PREVIEW = "use_clipboard_preview"
     private const val KEY_USE_CLIPBOARD_HISTORY = "use_clipboard_history"
     private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
+    private const val KEY_SHOW_HISTORY_SORT = "show_history_sort"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
     private const val KEY_PIP_ACTIONS_ENABLED = "pip_actions_enabled"
@@ -154,6 +155,9 @@ object SettingsManager {
 
     private val _notifGroupCompleted = MutableStateFlow(true)
     val notifGroupCompleted: StateFlow<Boolean> = _notifGroupCompleted
+
+    private val _showHistorySort = MutableStateFlow(true)
+    val showHistorySort: StateFlow<Boolean> = _showHistorySort
 
     private val _transitModeEnabled = MutableStateFlow(false)
     val transitModeEnabled: StateFlow<Boolean> = _transitModeEnabled
@@ -314,6 +318,7 @@ object SettingsManager {
         _saveToGallery.value = prefs?.getBoolean(KEY_SAVE_TO_GALLERY, true) ?: true
         _showThumbnails.value = prefs?.getBoolean(KEY_SHOW_THUMBNAILS, true) ?: true
         _showHistoryThumbnails.value = prefs?.getBoolean(KEY_SHOW_HISTORY_THUMBNAILS, true) ?: true
+        _showHistorySort.value = prefs?.getBoolean(KEY_SHOW_HISTORY_SORT, true) ?: true
         _showStorageStats.value = prefs?.getBoolean(KEY_SHOW_STORAGE_STATS, true) ?: true
         _showQualitySelector.value = prefs?.getBoolean(KEY_SHOW_QUALITY_SELECTOR, true) ?: true
         _preferredVideoQuality.value = prefs?.getString(KEY_PREFERRED_VIDEO_QUALITY, "best") ?: "best"
@@ -658,6 +663,11 @@ object SettingsManager {
     fun setShowHistoryThumbnails(value: Boolean) {
         _showHistoryThumbnails.value = value
         prefs?.edit()?.putBoolean(KEY_SHOW_HISTORY_THUMBNAILS, value)?.apply()
+    }
+
+    fun setShowHistorySort(value: Boolean) {
+        _showHistorySort.value = value
+        prefs?.edit()?.putBoolean(KEY_SHOW_HISTORY_SORT, value)?.apply()
     }
 
     fun setShowStorageStats(value: Boolean) {

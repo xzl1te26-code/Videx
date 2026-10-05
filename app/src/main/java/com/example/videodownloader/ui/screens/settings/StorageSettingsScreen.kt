@@ -212,64 +212,146 @@ fun StorageSettingsScreen(
     if (showDiskSpaceDialog) {
         val minDiskSpace by SettingsManager.minDiskSpace.collectAsState()
         val spaceOptions = listOf(
-            Triple(MinDiskSpace.NONE, stringResource(R.string.skip_immediately), "Скачивать до полного заполнения" to "OFF"),
-            Triple(MinDiskSpace.MB500, "Минимум 500 МБ", stringResource(R.string.stop_at_500mb) to "500"),
-            Triple(MinDiskSpace.GB1, "Минимум 1 ГБ", "Рекомендуется для системы" to "1GB")
+            Triple(MinDiskSpace.NONE, "Без ограничений", "Скачивать до полного заполнения устройства"),
+            Triple(MinDiskSpace.MB500, "Минимум 500 МБ", "Защита от переполнения внутренней памяти"),
+            Triple(MinDiskSpace.GB1, "Минимум 1 ГБ", "Оптимальный запас места для системы")
         )
 
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showDiskSpaceDialog = false },
-            title = { Text(stringResource(R.string.disk_space_limit_title), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    spaceOptions.forEach { (limit, title, info) ->
-                        val (subtitle, badge) = info
-                        val isSelected = minDiskSpace == limit
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.SdStorage,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.disk_space_limit_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Порог остановки загрузок при нехватке памяти",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { SettingsManager.setMinDiskSpace(limit); showDiskSpaceDialog = false }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                spaceOptions.forEach { (limit, title, subtitle) ->
+                    val isSelected = minDiskSpace == limit
+                    val icon = when (limit) {
+                        MinDiskSpace.NONE -> Icons.Default.AllInclusive
+                        MinDiskSpace.MB500 -> Icons.Default.SdCardAlert
+                        MinDiskSpace.GB1 -> Icons.Default.DiscFull
+                    }
+
+                    Surface(
+                        onClick = {
+                            SettingsManager.setMinDiskSpace(limit)
+                            showDiskSpaceDialog = false
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                                ) {
-                                    Text(
-                                        text = badge,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        fontSize = 10.sp
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(14.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.SdStorage, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    }
-                                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-
-                                RadioButton(selected = isSelected, onClick = { SettingsManager.setMinDiskSpace(limit); showDiskSpaceDialog = false })
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = title,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    SettingsManager.setMinDiskSpace(limit)
+                                    showDiskSpaceDialog = false
+                                }
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = {},
-            dismissButton = { TextButton(onClick = { showDiskSpaceDialog = false }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.close_action)) } }
-        )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Button(
+                    onClick = { showDiskSpaceDialog = false },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Готово", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 
     Scaffold(

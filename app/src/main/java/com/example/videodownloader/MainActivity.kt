@@ -691,9 +691,14 @@ fun AppNavigation(
                                 (slideInHorizontally(initialOffsetX = { (it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeIn(tween(200)))
                                     .togetherWith(slideOutHorizontally(targetOffsetX = { (-it * 0.3f * direction).toInt() }, animationSpec = tween(280)) + fadeOut(tween(200)))
                             }
-                            // Переход в подэкраны настроек (Горизонтальный слайд)
+                            // Возврат ИЗ подэкранов назад в Настройки (Слайд вправо)
+                            initialState !in mainTabs && targetState in mainTabs -> {
+                                (slideInHorizontally(initialOffsetX = { -it / 3 }, animationSpec = tween(280)) + fadeIn(tween(200)))
+                                    .togetherWith(slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(280)) + fadeOut(tween(200)))
+                            }
+                            // Вход В подэкраны Настроек (Слайд влево)
                             else -> {
-                                (slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(280)) + fadeIn(tween(200)))
+                                (slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(280)) + fadeIn(tween(200)))
                                     .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(280)) + fadeOut(tween(200)))
                             }
                         }

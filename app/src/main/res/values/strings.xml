@@ -116,9 +116,9 @@
     <string name="share_mode_preview_short_desc">Предпросмотр ролика перед загрузкой</string>
     <string name="login_services_title">Вход в сервисы</string>
     <string name="login_services_desc">Скачивание 18+, приватных Reels и групп VK</string>
-    <string name="speed_and_threads_title">Скорость и многопоточность</string>
+    <string name="speed_and_threads_title">Скорость и потоки</string>
     <string name="speed_and_threads_desc">Раздельные профили для Wi-Fi и 4G/5G</string>
-    <string name="notif_settings_title">Уведомления и кнопки</string>
+    <string name="notif_settings_title">Уведомления</string>
     <string name="notif_settings_desc">Кнопки в шторке, автоскрытие, звук</string>
     <string name="storage_and_files_header">ХРАНИЛИЩЕ И ФАЙЛЫ</string>
     <string name="download_folder_title">Папка для загрузок</string>
@@ -128,10 +128,10 @@
     <string name="cache_cleared_toast">Временный кэш успешно очищен</string>
     <string name="clear_cache_title">Очистка кэша</string>
     <string name="clear_cache_desc">Удаление временных файлов и фрагментов</string>
-    <string name="disk_space_control_title">Контроль места на диске</string>
+    <string name="disk_space_control_title">Контроль памяти</string>
     <string name="stop_at_500mb">Останавливать при &lt; 500 МБ</string>
     <string name="stop_at_1gb">Останавливать при &lt; 1 ГБ</string>
-    <string name="check_duplicates_title">Проверка дубликатов</string>
+    <string name="check_duplicates_title">Проверка повторов</string>
     <string name="check_duplicates_desc">Предупреждать о повторных загрузках</string>
     <string name="interface_appearance_header">ИНТЕРФЕЙС И ВНЕШНИЙ ВИД</string>
     <string name="dynamic_colors_title">Динамические цвета</string>
@@ -142,7 +142,7 @@
     <string name="quality_selector_desc">Отображать плашку разрешения на главном экране</string>
     <string name="thumbnails_before_download_title">Превью до загрузки</string>
     <string name="thumbnails_before_download_desc">Показывать превью ролика перед загрузкой</string>
-    <string name="history_thumbnails_title">Превью в истории</string>
+    <string name="history_thumbnails_title">Превью в Истории</string>
     <string name="history_thumbnails_desc">Отображать кадры медиафайлов в списке</string>
     <string name="storage_stats_title">Статус памяти</string>
     <string name="storage_stats_desc">Виджет занятого пространства в Истории</string>
@@ -154,7 +154,7 @@
     <string name="system_logs_desc">Просмотр технических логов и ошибок</string>
     <string name="auto_cleanup_logs_title">Автоочистка логов</string>
     <string name="auto_cleanup_logs_desc">Удалять записи старше 3-х дней</string>
-    <string name="sponsorblock_title">SponsorBlock (YouTube)</string>
+    <string name="sponsorblock_title">SponsorBlock</string>
     <string name="sponsorblock_desc">Автоматическое вырезание спонсорских вставок и интро</string>
     <string name="anti_block_title">Анти-блокировка</string>
     <string name="anti_block_desc">Имитация браузера для обхода 403 ошибок YouTube</string>
@@ -163,11 +163,11 @@
 
     <!-- Player Settings -->
     <string name="player_selection_header">Просмотр медиафайлов</string>
-    <string name="internal_player_title">Встроенные плееры и галерея</string>
+    <string name="internal_player_title">Встроенный плеер</string>
     <string name="internal_player_desc">Просмотр видео, фото и прослушивание аудио в стиле Material You</string>
-    <string name="pip_mode_title">Режим «Картинка в картинке» (PiP)</string>
+    <string name="pip_mode_title">Режим PiP</string>
     <string name="pip_mode_desc">Продолжать просмотр видео в маленьком окне при сворачивании приложения</string>
-    <string name="pip_actions_title">Кнопки управления в PiP</string>
+    <string name="pip_actions_title">Кнопки в PiP</string>
     <string name="pip_actions_desc">Добавить кнопки паузы и перемотки прямо в маленькое окно</string>
     <string name="external_player_title">Системные приложения</string>
     <string name="external_player_desc">Использовать сторонние плееры и галереи (VLC, системный просмотрщик)</string>

@@ -183,7 +183,7 @@ fun AppearanceSettingsScreen(
                         val showDynamicTips by SettingsManager.showDynamicTips.collectAsState()
 
                         SettingsSwitchRow(
-                            title = "Анимированная строка приветствия",
+                            title = "Анимация приветствия",
                             subtitle = "Живые динамические подсказки при открытии Главного экрана",
                             icon = Icons.Default.AutoAwesome,
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -197,7 +197,7 @@ fun AppearanceSettingsScreen(
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                 SettingsNavigationRow(
-                                    title = "Настройка кадров приветствия",
+                                    title = "Кадры приветствия",
                                     subtitle = "Текст, иконки и количество кадров",
                                     icon = Icons.Default.Slideshow,
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -246,7 +246,7 @@ fun AppearanceSettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                         SettingsSwitchRow(
-                            title = "Умная сортировка истории",
+                            title = "Сортировка истории",
                             subtitle = "Удобные фильтры по дате, размеру файла и длительности видео",
                             icon = Icons.Default.Sort,
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -290,7 +290,7 @@ fun AppearanceSettingsScreen(
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                 SettingsSwitchRow(
-                                    title = "Мини-превью ссылки из буфера",
+                                    title = "Превью ссылок",
                                     subtitle = "Загружать обложку и название ролика прямо в плашке смарт-буфера",
                                     icon = Icons.Default.Preview,
                                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -302,7 +302,7 @@ fun AppearanceSettingsScreen(
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                 SettingsSwitchRow(
-                                    title = "Недавно скопированные ссылки",
+                                    title = "История буфера",
                                     subtitle = "Запоминать последние 5 ссылок в истории смарт-буфера для быстрого доступа",
                                     icon = Icons.Default.History,
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer,

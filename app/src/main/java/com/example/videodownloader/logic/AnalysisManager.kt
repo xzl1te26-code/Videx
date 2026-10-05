@@ -128,18 +128,21 @@ object AnalysisManager {
             }
         }
 
+        _isAnalyzing.value = true
+        _errorMessage.value = ""
+        _resultTitle.value = ""
+        _resultThumbnail.value = ""
+        _isPhotoPost.value = false
+        _availableQualities.value = emptyList()
+        _isPlaylist.value = false
+        _playlistEntries.value = emptyList()
+
         // Проверка наличия активного подключения к интернету
         if (appContext != null && !com.example.videodownloader.utils.isNetworkAvailable(appContext)) {
             _isAnalyzing.value = false
             _errorMessage.value = "Отсутствует подключение к интернету. Проверьте сеть и повторите попытку."
             return
         }
-
-        _isAnalyzing.value = true
-        _errorMessage.value = ""
-        _availableQualities.value = emptyList()
-        _isPlaylist.value = false
-        _playlistEntries.value = emptyList()
 
         analyzeJob = scope.launch {
             try {

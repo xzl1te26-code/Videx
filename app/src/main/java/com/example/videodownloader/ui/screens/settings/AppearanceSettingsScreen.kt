@@ -282,8 +282,8 @@ fun AppearanceSettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                         SettingsSwitchRow(
-                            title = "История заборника буфера",
-                            subtitle = "Сохранение последних 5 скопированных ссылок для быстрого выбора",
+                            title = "Недавно скопированные ссылки",
+                            subtitle = "Запоминать последние 5 ссылок в истории смарт-буфера для быстрого доступа",
                             icon = Icons.Default.History,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

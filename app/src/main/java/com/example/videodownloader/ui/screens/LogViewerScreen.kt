@@ -163,9 +163,20 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
 
     // 📱 GOOGLE MATERIAL 3 STYLE BOTTOM SHEET "ОТЧЕТ РАЗРАБОТЧИКУ"
     if (showShareDialog) {
-        val lastLog = remember(logs) { logs.lastOrNull()?.message ?: "Событий в сессии не зафиксировано" }
         val currentVersion = remember(context) { AppUpdateChecker.getInstalledVersionName(context) }
-        val deviceInfo = remember { "${Build.MANUFACTURER} ${Build.MODEL} • Android ${Build.VERSION.RELEASE}" }
+        val pythonStatus = remember {
+            if (com.chaquo.python.Python.isStarted()) {
+                try {
+                    val py = com.chaquo.python.Python.getInstance()
+                    val ver = py.getModule("yt_dlp.version").get("__version__")?.toString() ?: "Запущен"
+                    "yt-dlp v$ver"
+                } catch (_: Exception) {
+                    "Python запущен"
+                }
+            } else {
+                "Не запущен"
+            }
+        }
 
         ModalBottomSheet(
             onDismissRequest = { showShareDialog = false },
@@ -216,74 +227,61 @@ fun LogViewerScreen(snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Videx v$currentVersion • $deviceInfo",
+                            text = "Диагностика и системные характеристики",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // КАРТОЧКА СТАТУСА СИСТЕМЫ И ПОСЛЕДНЕГО СОБЫТИЯ
+                // 📊 СВОДКА СИСТЕМНОЙ ДИАГНОСТИКИ (Material 3 Diagnostic Summary)
                 Surface(
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(20.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = CircleShape,
-                                color = if (errorCount > 0) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = if (errorCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = if (errorCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(5.dp))
-                                    Text(
-                                        text = if (errorCount > 0) "Зафиксировано ошибок: $errorCount" else "Системы работают штатно",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (errorCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontSize = 11.sp
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         Text(
-                            text = "ПОСЛЕДНЕЕ СОБЫТИЕ:",
+                            text = "СОСТАВ ДИАГНОСТИЧЕСКОГО ОТЧЕТА",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontSize = 10.sp
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 0.5.sp
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = lastLog,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.5.sp,
-                                lineHeight = 16.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 4,
-                            overflow = TextOverflow.Ellipsis
+                        DiagnosticSpecRow(
+                            icon = Icons.Default.Info,
+                            label = "Приложение",
+                            value = "Videx v$currentVersion"
+                        )
+                        DiagnosticSpecRow(
+                            icon = Icons.Default.Smartphone,
+                            label = "Устройство",
+                            value = "${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}"
+                        )
+                        DiagnosticSpecRow(
+                            icon = Icons.Default.Android,
+                            label = "Система",
+                            value = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+                        )
+                        DiagnosticSpecRow(
+                            icon = Icons.Default.Terminal,
+                            label = "Движок",
+                            value = pythonStatus
+                        )
+                        DiagnosticSpecRow(
+                            icon = if (errorCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
+                            label = "Состояние",
+                            value = if (errorCount > 0) "Ошибок: $errorCount • Записей: ${logs.size}" else "Штатное • Записей: ${logs.size}",
+                            valueColor = if (errorCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 // КНОПКА 1: СКОПИРОВАТЬ ОТЧЕТ
                 Button(
@@ -652,5 +650,42 @@ fun ModernLogCard(log: LogEntry) {
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+@Composable
+private fun DiagnosticSpecRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = valueColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

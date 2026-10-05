@@ -743,12 +743,14 @@ object HistoryManager {
         // Группируем потерянные файлы по отпечатку (Размер + Длительность) для быстрого "исцеления"
         val missingMap = cleanEntries.filter { it.isMissing && it.mediaType != MediaType.PHOTO }
             .groupBy { "${it.sizeBytes}_${it.durationMs}" }
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
         
         val existingPaths = cleanEntries.map { it.pathOrUri }.toSet()
         val existingFingerprints = cleanEntries.asSequence().map { 
             val cleanName = it.name.substringBeforeLast('.')
             "${cleanName}_${it.sizeBytes}" 
-        }.toSet()
+        }.toMutableSet()
         
         val folders = mutableListOf(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path + "/Videx",
@@ -782,6 +784,10 @@ object HistoryManager {
                 if (file.isFile && !isTrashedOrTempFile(file)) {
                     if (existingPaths.contains(file.absolutePath)) return@forEach
 
+                    // 🛡️ Защита от дублей MediaStore: проверяем, не сохранен ли файл в БД под URI (content://)
+                    val mediaUri = findUriForPath(appContext, file.absolutePath)
+                    if (mediaUri != null && existingPaths.contains(mediaUri.toString())) return@forEach
+
                     val ext = file.extension.lowercase()
                     val mediaType = when (ext) {
                         "jpg", "jpeg", "png", "webp" -> MediaType.PHOTO
@@ -793,8 +799,9 @@ object HistoryManager {
                     val duration = if (mediaType != MediaType.PHOTO) getMediaDuration(appContext, file.absolutePath) else 0L
                     val fingerprintByMeta = "${size}_$duration"
                     
-                    // Проверяем, не является ли файл переименованным ранее скачанным ролика
-                    val healingTarget = if (mediaType != MediaType.PHOTO) missingMap[fingerprintByMeta]?.firstOrNull() else null
+                    // 🧠 Защита от дублей исцеления: забираем потерянный файл из списка, чтобы не исцелить им дважды
+                    val healingList = if (mediaType != MediaType.PHOTO) missingMap[fingerprintByMeta] else null
+                    val healingTarget = if (healingList != null && healingList.isNotEmpty()) healingList.removeAt(0) else null
                     
                     if (healingTarget != null) {
                         // "Исцеляем" старую запись: обновляем путь и имя, сбрасываем статус пропажи
@@ -809,7 +816,10 @@ object HistoryManager {
                         val cleanFileName = file.nameWithoutExtension
                         val nameFingerprint = "${cleanFileName}_${size}"
                         
+                        // 🛡️ Защита от дублей сканирования: добавляем в отпечатки сразу же
                         if (!existingFingerprints.contains(nameFingerprint)) {
+                            existingFingerprints.add(nameFingerprint)
+                            
                             // Кэшируем превью-кадр для найденного видеофайла
                             val localThumb = if (mediaType == MediaType.VIDEO) {
                                 cacheThumbnailLocally(appContext, file.absolutePath, mediaType, null)

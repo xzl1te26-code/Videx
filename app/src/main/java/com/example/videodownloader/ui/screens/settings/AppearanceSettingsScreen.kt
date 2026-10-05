@@ -267,29 +267,39 @@ fun AppearanceSettingsScreen(
                             onCheckedChange = { SettingsManager.setUseClipboardBubble(it) }
                         )
 
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        val isBubbleEnabled by SettingsManager.useClipboardBubble.collectAsState()
 
-                        SettingsSwitchRow(
-                            title = "Мини-превью ссылки из буфера",
-                            subtitle = "Загружать обложку и название ролика прямо в плашке смарт-буфера",
-                            icon = Icons.Default.Preview,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            stateFlow = SettingsManager.useClipboardPreview,
-                            onCheckedChange = { SettingsManager.setUseClipboardPreview(it) }
-                        )
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = isBubbleEnabled,
+                            enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                            exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+                        ) {
+                            Column {
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                SettingsSwitchRow(
+                                    title = "Мини-превью ссылки из буфера",
+                                    subtitle = "Загружать обложку и название ролика прямо в плашке смарт-буфера",
+                                    icon = Icons.Default.Preview,
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    stateFlow = SettingsManager.useClipboardPreview,
+                                    onCheckedChange = { SettingsManager.setUseClipboardPreview(it) }
+                                )
 
-                        SettingsSwitchRow(
-                            title = "Недавно скопированные ссылки",
-                            subtitle = "Запоминать последние 5 ссылок в истории смарт-буфера для быстрого доступа",
-                            icon = Icons.Default.History,
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            stateFlow = SettingsManager.useClipboardHistory,
-                            onCheckedChange = { SettingsManager.setUseClipboardHistory(it) }
-                        )
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                SettingsSwitchRow(
+                                    title = "Недавно скопированные ссылки",
+                                    subtitle = "Запоминать последние 5 ссылок в истории смарт-буфера для быстрого доступа",
+                                    icon = Icons.Default.History,
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    stateFlow = SettingsManager.useClipboardHistory,
+                                    onCheckedChange = { SettingsManager.setUseClipboardHistory(it) }
+                                )
+                            }
+                        }
                     }
                 }
             }

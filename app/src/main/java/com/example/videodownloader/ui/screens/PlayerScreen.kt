@@ -30,22 +30,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -840,73 +825,107 @@ private fun SeekVisualFeedback(
     seekPulseTrigger: Int,
     isLandscape: Boolean
 ) {
-    // 🧠 ЗАПОМИНАЕМ ПОСЛЕДНЕЕ НЕ-NULL НАПРАВЛЕНИЕ, чтобы во время exit-анимации плашка не перескакивала на противоположную сторону!
+    // ЗАПОМИНАЕМ ПОСЛЕДНЕЕ НЕ-NULL НАПРАВЛЕНИЕ, чтобы во время exit-анимации плашка не перескакивала на противоположную сторону
     var lastActiveAction by remember { mutableStateOf<SeekAction?>(null) }
     if (seekAction != null) {
         lastActiveAction = seekAction
     }
 
     val activeAction = seekAction ?: lastActiveAction ?: SeekAction.Forward
-    val alignment = if (activeAction == SeekAction.Forward) Alignment.CenterEnd else Alignment.CenterStart
+    val isForward = activeAction == SeekAction.Forward
+    val alignment = if (isForward) Alignment.CenterEnd else Alignment.CenterStart
 
     var localPulse by remember { mutableIntStateOf(0) }
     val pulseScale by animateFloatAsState(
-        targetValue = if (localPulse > 0) 1.25f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+        targetValue = if (localPulse > 0) 1.15f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "seekPulseScale"
     )
 
     LaunchedEffect(seekPulseTrigger) {
         if (seekPulseTrigger > 0) {
             localPulse = seekPulseTrigger
-            delay(120.milliseconds)
+            delay(150.milliseconds)
             localPulse = 0
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Полупрозрачная дуга-подложка (Стиль современных плееров: YouTube, Apple TV)
         AnimatedVisibility(
             visible = seekAction != null,
-            enter = fadeIn(animationSpec = tween(120)) + scaleIn(
-                initialScale = 0.65f,
-                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
-            ),
-            exit = fadeOut(animationSpec = tween(180)) + scaleOut(
-                targetScale = 0.75f,
-                animationSpec = tween(180)
-            ),
+            enter = fadeIn(animationSpec = tween(250)),
+            exit = fadeOut(animationSpec = tween(400)),
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(if (isLandscape) 0.35f else 0.45f)
+                .align(alignment)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(
+                        if (isForward) RoundedCornerShape(topStartPercent = 100, bottomStartPercent = 100)
+                        else RoundedCornerShape(topEndPercent = 100, bottomEndPercent = 100)
+                    )
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = if (isForward) {
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f))
+                            } else {
+                                listOf(Color.Black.copy(alpha = 0.35f), Color.Transparent)
+                            }
+                        )
+                    )
+            )
+        }
+
+        // 2. Иконка и текст с пружинной анимацией прыжка
+        AnimatedVisibility(
+            visible = seekAction != null,
+            enter = fadeIn(animationSpec = tween(150)) + scaleIn(initialScale = 0.85f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)),
+            exit = fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.9f),
             modifier = Modifier
                 .align(alignment)
-                .padding(horizontal = if (isLandscape) 72.dp else 40.dp)
+                .padding(horizontal = if (isLandscape) 90.dp else 45.dp)
         ) {
-            Surface(
-                shape = CircleShape,
-                color = Color.Black.copy(alpha = 0.55f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
-                modifier = Modifier
-                    .scale(pulseScale)
-                    .size(if (isLandscape) 96.dp else 108.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.scale(pulseScale)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                // Три наслаивающиеся стрелки (премиальная кастомная иконка перемотки)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy((-14).dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = if (activeAction == SeekAction.Forward) Icons.Default.Forward10 else Icons.Default.Replay10,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(if (isLandscape) 40.dp else 46.dp)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = if (activeAction == SeekAction.Forward) "+${seekSeconds}с" else "-${seekSeconds}с",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 14.sp
-                    )
+                    if (isForward) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(38.dp))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(38.dp))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(38.dp))
+                    } else {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(38.dp).graphicsLayer(rotationZ = 180f))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(38.dp).graphicsLayer(rotationZ = 180f))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(38.dp).graphicsLayer(rotationZ = 180f))
+                    }
                 }
+                
+                Spacer(modifier = Modifier.height(6.dp))
+                
+                Text(
+                    text = "${seekSeconds} сек",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color = Color.Black.copy(alpha = 0.6f),
+                            offset = androidx.compose.ui.geometry.Offset(0f, 4f),
+                            blurRadius = 8f
+                        )
+                    ),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 15.sp,
+                    letterSpacing = 0.5.sp
+                )
             }
         }
     }

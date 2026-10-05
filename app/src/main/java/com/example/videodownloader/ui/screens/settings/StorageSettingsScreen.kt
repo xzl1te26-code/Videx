@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,84 +63,150 @@ fun StorageSettingsScreen(
     if (showTemplateDialog) {
         val fileNameTemplate by SettingsManager.fileNameTemplate.collectAsState()
         val templateOptions = listOf(
-            Triple(FileNameTemplate.TITLE_PLATFORM, "Название и сервис", "Пример: Видео - YouTube.mp4"),
-            Triple(FileNameTemplate.TITLE_ONLY, "Только название", "Пример: Видео.mp4"),
-            Triple(FileNameTemplate.PLATFORM_TITLE, "Сервис и название", "Пример: [YouTube] Видео.mp4"),
-            Triple(FileNameTemplate.DATE_TITLE, "Дата и название", "Пример: 20261005_Видео.mp4"),
-            Triple(FileNameTemplate.DATE_TIME_TITLE, "Дата, время и название", "Пример: 20261005_1830_Видео.mp4")
+            Triple(FileNameTemplate.TITLE_PLATFORM, "Название и сервис", "Видео - YouTube.mp4"),
+            Triple(FileNameTemplate.TITLE_ONLY, "Только название", "Видео.mp4"),
+            Triple(FileNameTemplate.PLATFORM_TITLE, "Сервис и название", "[YouTube] Видео.mp4"),
+            Triple(FileNameTemplate.DATE_TITLE, "Дата и название", "20261005_Видео.mp4"),
+            Triple(FileNameTemplate.DATE_TIME_TITLE, "Дата, время и название", "20261005_1830_Видео.mp4")
         )
 
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showTemplateDialog = false },
-            title = { Text(stringResource(R.string.filename_template_title), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    templateOptions.forEach { (tmpl, title, subtitle) ->
-                        val isSelected = fileNameTemplate == tmpl
-                        val icon = when (tmpl) {
-                            FileNameTemplate.TITLE_PLATFORM -> Icons.Default.TextFields
-                            FileNameTemplate.TITLE_ONLY -> Icons.Default.ShortText
-                            FileNameTemplate.PLATFORM_TITLE -> Icons.Default.Label
-                            FileNameTemplate.DATE_TITLE -> Icons.Default.Event
-                            FileNameTemplate.DATE_TIME_TITLE -> Icons.Default.Schedule
-                        }
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.TextFields,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.filename_template_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Выберите формат сохранения медиафайлов",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { SettingsManager.setFileNameTemplate(tmpl); showTemplateDialog = false }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                templateOptions.forEach { (tmpl, title, subtitle) ->
+                    val isSelected = fileNameTemplate == tmpl
+                    val icon = when (tmpl) {
+                        FileNameTemplate.TITLE_PLATFORM -> Icons.Default.TextFields
+                        FileNameTemplate.TITLE_ONLY -> Icons.Default.Subtitles
+                        FileNameTemplate.PLATFORM_TITLE -> Icons.Default.Label
+                        FileNameTemplate.DATE_TITLE -> Icons.Default.Event
+                        FileNameTemplate.DATE_TIME_TITLE -> Icons.Default.Schedule
+                    }
+
+                    Surface(
+                        onClick = {
+                            SettingsManager.setFileNameTemplate(tmpl)
+                            showTemplateDialog = false
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = title,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                RadioButton(selected = isSelected, onClick = { SettingsManager.setFileNameTemplate(tmpl); showTemplateDialog = false })
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = title,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    SettingsManager.setFileNameTemplate(tmpl)
+                                    showTemplateDialog = false
+                                }
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = {},
-            dismissButton = { TextButton(onClick = { showTemplateDialog = false }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.close_action)) } }
-        )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Button(
+                    onClick = { showTemplateDialog = false },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Готово", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 
     if (showDiskSpaceDialog) {

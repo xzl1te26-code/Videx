@@ -280,9 +280,9 @@ fun AppearanceSettingsScreen(
 
                         if (showSyncModeDialog) {
                             val syncOptions = listOf(
-                                Triple(com.example.videodownloader.HistorySyncMode.BOTH, "Кнопка и свайп вниз", "Доступны и иконка [🔄] в шапке, и свайп по экрану"),
-                                Triple(com.example.videodownloader.HistorySyncMode.SWIPE_ONLY, "Только свайп вниз", "Иконка [🔄] скрывается из шапки, обновление жестом"),
-                                Triple(com.example.videodownloader.HistorySyncMode.BUTTON_ONLY, "Только кнопка в шапке", "Классический режим обновления кнопкой (без свайпа)")
+                                Triple(com.example.videodownloader.HistorySyncMode.BOTH, "Кнопка и свайп вниз", "Доступны кнопка в шапке и свайп по экрану"),
+                                Triple(com.example.videodownloader.HistorySyncMode.SWIPE_ONLY, "Только свайп вниз", "Кнопка скрывается из шапки, обновление свайпом"),
+                                Triple(com.example.videodownloader.HistorySyncMode.BUTTON_ONLY, "Только кнопка в шапке", "Классическое обновление кнопкой (без свайпа)")
                             )
 
                             ModalBottomSheet(

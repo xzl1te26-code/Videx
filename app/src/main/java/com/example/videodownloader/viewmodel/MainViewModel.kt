@@ -45,6 +45,9 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     // Текущий активный экран
     var currentScreen by mutableStateOf(com.example.videodownloader.Screen.Home)
 
+    // Флаг однократного воспроизведения анимации кадров за сессию
+    var hasTipAnimationPlayedThisSession by mutableStateOf(false)
+
     // 📋 Отклоненная ссылка из буфера обмена (персистентное состояние между вкладками)
     var dismissedClipboardUrl by mutableStateOf<String?>(null)
 

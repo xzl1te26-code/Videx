@@ -267,6 +267,98 @@ fun TipFramesSettingsScreen(
                 }
             }
 
+            // Параметры скорости и условий
+            item {
+                Text(
+                    text = "ПАРАМЕТРЫ АНИМАЦИИ",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                )
+            }
+
+            item {
+                val tipAnimationSpeedMs by SettingsManager.tipAnimationSpeedMs.collectAsState()
+                val tipPlaybackMode by SettingsManager.tipPlaybackMode.collectAsState()
+                val currentSpeedSec = (tipAnimationSpeedMs / 1000f)
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)),
+                    border = com.example.videodownloader.ui.theme.getAppCardBorder()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Скорость смены кадров", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Text("Интервал задержки перед переходом к следующему кадру", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Text(
+                                        text = String.format(java.util.Locale.US, "%.1f сек", currentSpeedSec),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Slider(
+                                value = currentSpeedSec.coerceIn(1.0f, 6.0f),
+                                onValueChange = { SettingsManager.setTipAnimationSpeedSec(it) },
+                                valueRange = 1.0f..6.0f,
+                                steps = 9
+                            )
+                        }
+
+                        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                        Column {
+                            Text("Частота воспроизведения", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Text("Выберите, когда анимировать кадры на Главном экране", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = tipPlaybackMode == com.example.videodownloader.TipPlaybackMode.EVERY_NAVIGATION,
+                                    onClick = { SettingsManager.setTipPlaybackMode(com.example.videodownloader.TipPlaybackMode.EVERY_NAVIGATION) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                                ) {
+                                    Text("Каждый раз", fontWeight = FontWeight.Bold)
+                                }
+
+                                SegmentedButton(
+                                    selected = tipPlaybackMode == com.example.videodownloader.TipPlaybackMode.APP_LAUNCH_ONLY,
+                                    onClick = { SettingsManager.setTipPlaybackMode(com.example.videodownloader.TipPlaybackMode.APP_LAUNCH_ONLY) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                                ) {
+                                    Text("Только при запуске", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Редактирование кадров
             item {
                 Text(

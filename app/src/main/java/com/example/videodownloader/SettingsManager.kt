@@ -14,6 +14,7 @@ enum class FileNameTemplate { TITLE_PLATFORM, DATE_TITLE }
 enum class MinDiskSpace(val bytes: Long) { NONE(0L), MB500(500L * 1024 * 1024), GB1(1024L * 1024 * 1024) }
 enum class AppTheme { SYSTEM, DARK, LIGHT }
 enum class HistoryTitleMode { TWO_LINES, MARQUEE, SINGLE_LINE }
+enum class TipPlaybackMode { EVERY_NAVIGATION, APP_LAUNCH_ONLY }
 enum class HapticIntensity { SOFT, STANDARD, STRONG }
 enum class HapticType { CLICK, LONG_PRESS, PLAYER_GESTURE, SUCCESS, SELECTION }
 
@@ -51,6 +52,8 @@ object SettingsManager {
     private const val KEY_APP_THEME = "app_theme"
     private const val KEY_SHOW_DYNAMIC_TIPS = "show_dynamic_tips"
     private const val KEY_TIP_FRAMES_DATA = "tip_frames_data_v2"
+    private const val KEY_TIP_ANIMATION_SPEED_MS = "tip_animation_speed_ms_v1"
+    private const val KEY_TIP_PLAYBACK_MODE = "tip_playback_mode_v1"
 
     // Уведомления
     private const val KEY_NOTIF_ACTION_OPEN = "notif_action_open"
@@ -221,6 +224,12 @@ object SettingsManager {
     private val _tipFrames = MutableStateFlow(defaultTipFrames)
     val tipFrames: StateFlow<List<TipFrameData>> = _tipFrames
 
+    private val _tipAnimationSpeedMs = MutableStateFlow(2400L)
+    val tipAnimationSpeedMs: StateFlow<Long> = _tipAnimationSpeedMs
+
+    private val _tipPlaybackMode = MutableStateFlow(TipPlaybackMode.EVERY_NAVIGATION)
+    val tipPlaybackMode: StateFlow<TipPlaybackMode> = _tipPlaybackMode
+
     private val _useInternalPlayer = MutableStateFlow(true)
     val useInternalPlayer: StateFlow<Boolean> = _useInternalPlayer
 
@@ -368,6 +377,9 @@ object SettingsManager {
             _recentClipboardUrls.value = savedRecentUrls.split(";;;").filter { it.isNotBlank() }.take(5)
         }
         _showDynamicTips.value = prefs?.getBoolean(KEY_SHOW_DYNAMIC_TIPS, true) ?: true
+        _tipAnimationSpeedMs.value = prefs?.getLong(KEY_TIP_ANIMATION_SPEED_MS, 2400L) ?: 2400L
+        val modeStr = prefs?.getString(KEY_TIP_PLAYBACK_MODE, TipPlaybackMode.EVERY_NAVIGATION.name)
+        _tipPlaybackMode.value = try { TipPlaybackMode.valueOf(modeStr!!) } catch (_: Exception) { TipPlaybackMode.EVERY_NAVIGATION }
 
         val encodedFrames = prefs?.getString(KEY_TIP_FRAMES_DATA, null)
         if (!encodedFrames.isNullOrBlank()) {
@@ -795,6 +807,17 @@ object SettingsManager {
     fun setShowDynamicTips(value: Boolean) {
         _showDynamicTips.value = value
         prefs?.edit()?.putBoolean(KEY_SHOW_DYNAMIC_TIPS, value)?.apply()
+    }
+
+    fun setTipAnimationSpeedSec(seconds: Float) {
+        val ms = (seconds.coerceIn(1.0f, 10.0f) * 1000f).toLong()
+        _tipAnimationSpeedMs.value = ms
+        prefs?.edit()?.putLong(KEY_TIP_ANIMATION_SPEED_MS, ms)?.apply()
+    }
+
+    fun setTipPlaybackMode(mode: TipPlaybackMode) {
+        _tipPlaybackMode.value = mode
+        prefs?.edit()?.putString(KEY_TIP_PLAYBACK_MODE, mode.name)?.apply()
     }
 
     fun setTipFrames(frames: List<TipFrameData>) {

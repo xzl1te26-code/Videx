@@ -300,14 +300,21 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
         item {
             val showDynamicTips by SettingsManager.showDynamicTips.collectAsState()
             val tipFrames by SettingsManager.tipFrames.collectAsState()
+            val tipAnimationSpeedMs by SettingsManager.tipAnimationSpeedMs.collectAsState()
+            val tipPlaybackMode by SettingsManager.tipPlaybackMode.collectAsState()
 
             var phraseIndex by remember { mutableIntStateOf(0) }
 
-            LaunchedEffect(showDynamicTips, tipFrames) {
-                if (showDynamicTips && tipFrames.isNotEmpty()) {
+            LaunchedEffect(showDynamicTips, tipFrames, tipAnimationSpeedMs, tipPlaybackMode) {
+                val shouldAnimate = showDynamicTips && tipFrames.isNotEmpty() && (
+                    tipPlaybackMode == com.example.videodownloader.TipPlaybackMode.EVERY_NAVIGATION || !viewModel.hasTipAnimationPlayedThisSession
+                )
+
+                if (shouldAnimate) {
+                    viewModel.hasTipAnimationPlayedThisSession = true
                     phraseIndex = 0
                     for (i in 1 until tipFrames.size) {
-                        kotlinx.coroutines.delay(2400)
+                        delay(tipAnimationSpeedMs)
                         phraseIndex = i
                     }
                 } else {

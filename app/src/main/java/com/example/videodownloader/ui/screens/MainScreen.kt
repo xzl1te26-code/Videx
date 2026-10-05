@@ -819,9 +819,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
         }
 
         item {
-            // Если есть ошибка - убираем плашку анализа/результата. Иначе, если ссылка валидна (анализируется или загружена) - показываем её.
             AnimatedVisibility(
-                visible = errorMessage.isBlank() && ((isCurrentUrlValid && (isAnalyzing || resultTitle.isNotBlank())) || isDownloading),
+                visible = errorMessage.isBlank() && (isCurrentUrlValid || isDownloading),
                 enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) + fadeIn() + scaleIn(initialScale = 0.95f),
                 exit = shrinkVertically() + fadeOut() + scaleOut(targetScale = 0.95f)
             ) {
@@ -830,7 +829,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         Crossfade(targetState = isAnalyzing, animationSpec = tween(350), label = "SkeletonCrossfade") { analyzing ->
                             if (analyzing) {
                                 MediaCardSkeleton(showThumbnails = showThumbnails)
-                            } else {
+                            } else if (resultTitle.isNotBlank() || isDownloading) {
                                 Column {
                                     AnimatedVisibility(visible = showThumbnails && resultThumbnail.isNotBlank(), enter = expandVertically() + fadeIn(animationSpec = tween(400)), exit = shrinkVertically() + fadeOut()) {
                                         Column {
@@ -1000,6 +999,47 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                            } else {
+                                // Состояние, когда анализ не выполнен (например, после закрытия ошибки)
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.SavedSearch, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(28.dp))
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "Ссылка готова к проверке",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Нажмите кнопку ниже, чтобы загрузить информацию о медиафайле и выбрать качество.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(horizontal = 24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Button(
+                                        onClick = {
+                                            view.performAppHaptic(HapticType.CLICK)
+                                            AnalysisManager.onIncomingUrl(url, autoAnalyze = true)
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                        shape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Анализировать ссылку", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }

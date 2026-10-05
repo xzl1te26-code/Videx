@@ -196,7 +196,7 @@ fun SpeedSettingsScreen(onBack: () -> Unit) {
 
     if (showLimitDialog) {
         val limitOptions = listOf(
-            Triple(0L, stringResource(R.string.skip_immediately), stringResource(R.string.unlimited_speed_desc)),
+            Triple(0L, "Без ограничений", stringResource(R.string.unlimited_speed_desc)),
             Triple(10485760L, stringResource(R.string.limit_10mb_title), stringResource(R.string.limit_10mb_desc)),
             Triple(5242880L, stringResource(R.string.limit_5mb_title), stringResource(R.string.limit_5mb_desc)),
             Triple(2097152L, stringResource(R.string.limit_2mb_title), stringResource(R.string.limit_2mb_desc)),
@@ -511,7 +511,7 @@ fun SpeedSettingsScreen(onBack: () -> Unit) {
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(stringResource(R.string.rate_limit_title), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                                Text(text = if (rateLimit > 0) stringResource(R.string.speed_limit_max_desc, rateLimit / (1024 * 1024)) else stringResource(R.string.skip_immediately), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = if (rateLimit > 0) stringResource(R.string.speed_limit_max_desc, rateLimit / (1024 * 1024)) else "Без ограничений", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }

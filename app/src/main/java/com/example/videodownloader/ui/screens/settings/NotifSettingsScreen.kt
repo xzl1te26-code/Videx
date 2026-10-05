@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,46 +46,140 @@ fun NotifSettingsScreen(onBack: () -> Unit) {
     
     if (showAutoDismissDialog) {
         val dismissOptions = listOf(
-            AutoDismissOption(0L, stringResource(R.string.dismiss_off), stringResource(R.string.dismiss_off_desc), "Off"),
+            AutoDismissOption(0L, stringResource(R.string.dismiss_off), stringResource(R.string.dismiss_off_desc), "OFF"),
             AutoDismissOption(5000L, stringResource(R.string.dismiss_5s), stringResource(R.string.dismiss_5s_desc), "5s"),
             AutoDismissOption(10000L, stringResource(R.string.dismiss_10s), stringResource(R.string.dismiss_10s_desc), "10s"),
             AutoDismissOption(15000L, stringResource(R.string.dismiss_15s), stringResource(R.string.dismiss_15s_desc), "15s")
         )
-        AlertDialog(
+
+        ModalBottomSheet(
             onDismissRequest = { showAutoDismissDialog = false },
-            title = { Text(text = stringResource(R.string.auto_dismiss_notifications_title), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = stringResource(R.string.auto_dismiss_notifications_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    Spacer(modifier = Modifier.height(4.dp))
-                    for (opt in dismissOptions) {
-                        val isSelected = notifAutoDismiss == opt.millis
-                        val itemBg by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp), label = "itemBg")
-                        val itemBorder by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f), label = "itemBorder")
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = itemBg,
-                            border = BorderStroke(1.dp, itemBorder),
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { SettingsManager.setNotifAutoDismiss(opt.millis); showAutoDismissDialog = false }
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.auto_dismiss_notifications_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Автоматическая очистка готовых пушей из шторки",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                for (opt in dismissOptions) {
+                    val isSelected = notifAutoDismiss == opt.millis
+                    Surface(
+                        onClick = {
+                            SettingsManager.setNotifAutoDismiss(opt.millis)
+                            showAutoDismissDialog = false
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Surface(shape = RoundedCornerShape(8.dp), color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant) {
-                                    Text(text = opt.badge, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 11.sp)
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = opt.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                                    Text(text = opt.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                RadioButton(selected = isSelected, onClick = { SettingsManager.setNotifAutoDismiss(opt.millis); showAutoDismissDialog = false })
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Text(
+                                    text = opt.badge,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    fontSize = 11.sp
+                                )
                             }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = opt.title,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = opt.subtitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    SettingsManager.setNotifAutoDismiss(opt.millis)
+                                    showAutoDismissDialog = false
+                                }
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = { Button(onClick = { showAutoDismissDialog = false }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.close_action)) } },
-            dismissButton = {}
-        )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Button(
+                    onClick = { showAutoDismissDialog = false },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Готово", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 
     Scaffold(

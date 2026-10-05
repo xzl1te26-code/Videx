@@ -645,10 +645,6 @@ fun AppNavigation(
         Box(modifier = Modifier
             .fillMaxSize()
             .nestedScroll(nestedScrollConnection)
-            .graphicsLayer {
-                scaleX = listScale
-                scaleY = listScale
-            }
         ) {
         Scaffold(
             snackbarHost = {
@@ -672,7 +668,12 @@ fun AppNavigation(
                 )
             },
             containerColor = MaterialTheme.colorScheme.background,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = listScale
+                    scaleY = listScale
+                }
         ) { paddingValues ->
             Box(modifier = Modifier
                 .fillMaxSize()

@@ -1072,13 +1072,24 @@ private fun HistoryItemCard(
             }
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
+                val historyTitleMode by SettingsManager.historyTitleMode.collectAsState()
+                val titleModifier = when (historyTitleMode) {
+                    com.example.videodownloader.HistoryTitleMode.MARQUEE -> Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+                    else -> Modifier
+                }
+                val maxLinesValue = when (historyTitleMode) {
+                    com.example.videodownloader.HistoryTitleMode.TWO_LINES -> 2
+                    else -> 1
+                }
+
                 Text(
                     text = item.name,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
+                    maxLines = maxLinesValue,
                     overflow = TextOverflow.Ellipsis,
-                    color = if (item.isMissing) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+                    color = if (item.isMissing) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
+                    modifier = titleModifier
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 if (item.isMissing) {

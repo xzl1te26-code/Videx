@@ -13,6 +13,7 @@ enum class PlatformDownloadRule { VIDEO, AUDIO, PREVIEW_ONLY }
 enum class FileNameTemplate { TITLE_PLATFORM, DATE_TITLE }
 enum class MinDiskSpace(val bytes: Long) { NONE(0L), MB500(500L * 1024 * 1024), GB1(1024L * 1024 * 1024) }
 enum class AppTheme { SYSTEM, DARK, LIGHT }
+enum class HistoryTitleMode { TWO_LINES, MARQUEE, SINGLE_LINE }
 enum class HapticIntensity { SOFT, STANDARD, STRONG }
 enum class HapticType { CLICK, LONG_PRESS, PLAYER_GESTURE, SUCCESS, SELECTION }
 
@@ -41,6 +42,7 @@ object SettingsManager {
     private const val KEY_USE_CLIPBOARD_HISTORY = "use_clipboard_history"
     private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
     private const val KEY_SHOW_HISTORY_SORT = "show_history_sort"
+    private const val KEY_HISTORY_TITLE_MODE = "history_title_mode_v1"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
     private const val KEY_PIP_ACTIONS_ENABLED = "pip_actions_enabled"
@@ -158,6 +160,9 @@ object SettingsManager {
 
     private val _showHistorySort = MutableStateFlow(true)
     val showHistorySort: StateFlow<Boolean> = _showHistorySort
+
+    private val _historyTitleMode = MutableStateFlow(HistoryTitleMode.TWO_LINES)
+    val historyTitleMode: StateFlow<HistoryTitleMode> = _historyTitleMode
 
     private val _transitModeEnabled = MutableStateFlow(false)
     val transitModeEnabled: StateFlow<Boolean> = _transitModeEnabled
@@ -319,6 +324,8 @@ object SettingsManager {
         _showThumbnails.value = prefs?.getBoolean(KEY_SHOW_THUMBNAILS, true) ?: true
         _showHistoryThumbnails.value = prefs?.getBoolean(KEY_SHOW_HISTORY_THUMBNAILS, true) ?: true
         _showHistorySort.value = prefs?.getBoolean(KEY_SHOW_HISTORY_SORT, true) ?: true
+        val titleModeStr = prefs?.getString(KEY_HISTORY_TITLE_MODE, HistoryTitleMode.TWO_LINES.name)
+        _historyTitleMode.value = try { HistoryTitleMode.valueOf(titleModeStr!!) } catch (_: Exception) { HistoryTitleMode.TWO_LINES }
         _showStorageStats.value = prefs?.getBoolean(KEY_SHOW_STORAGE_STATS, true) ?: true
         _showQualitySelector.value = prefs?.getBoolean(KEY_SHOW_QUALITY_SELECTOR, true) ?: true
         _preferredVideoQuality.value = prefs?.getString(KEY_PREFERRED_VIDEO_QUALITY, "best") ?: "best"
@@ -668,6 +675,11 @@ object SettingsManager {
     fun setShowHistorySort(value: Boolean) {
         _showHistorySort.value = value
         prefs?.edit()?.putBoolean(KEY_SHOW_HISTORY_SORT, value)?.apply()
+    }
+
+    fun setHistoryTitleMode(mode: HistoryTitleMode) {
+        _historyTitleMode.value = mode
+        prefs?.edit()?.putString(KEY_HISTORY_TITLE_MODE, mode.name)?.apply()
     }
 
     fun setShowStorageStats(value: Boolean) {

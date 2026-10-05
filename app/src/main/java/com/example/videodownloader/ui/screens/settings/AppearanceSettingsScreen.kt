@@ -13,9 +13,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -254,6 +257,71 @@ fun AppearanceSettingsScreen(
                             stateFlow = SettingsManager.showHistorySort,
                             onCheckedChange = { SettingsManager.setShowHistorySort(it) }
                         )
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                        var showTitleModeDialog by remember { mutableStateOf(false) }
+                        val historyTitleMode by SettingsManager.historyTitleMode.collectAsState()
+                        val titleModeText = when (historyTitleMode) {
+                            com.example.videodownloader.HistoryTitleMode.TWO_LINES -> "Две строки (Рекомендуется)"
+                            com.example.videodownloader.HistoryTitleMode.MARQUEE -> "Бегущая строка"
+                            com.example.videodownloader.HistoryTitleMode.SINGLE_LINE -> "Одна строка"
+                        }
+
+                        SettingsNavigationRow(
+                            title = "Названия файлов в Истории",
+                            subtitle = titleModeText,
+                            icon = Icons.Default.Title,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = { showTitleModeDialog = true }
+                        )
+
+                        if (showTitleModeDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showTitleModeDialog = false },
+                                title = { Text("Названия файлов в Истории", fontWeight = FontWeight.Bold) },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        listOf(
+                                            com.example.videodownloader.HistoryTitleMode.TWO_LINES to ("Две строки" to "Перенос названия до 2 строк"),
+                                            com.example.videodownloader.HistoryTitleMode.MARQUEE to ("Бегущая строка" to "Анимированная прокрутка в 1 строку"),
+                                            com.example.videodownloader.HistoryTitleMode.SINGLE_LINE to ("Одна строка" to "Сжатый вид с троеточием")
+                                        ).forEach { (mode, info) ->
+                                            val (title, desc) = info
+                                            val isSelected = historyTitleMode == mode
+                                            Surface(
+                                                shape = RoundedCornerShape(16.dp),
+                                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable {
+                                                    SettingsManager.setHistoryTitleMode(mode)
+                                                    showTitleModeDialog = false
+                                                }
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                                        Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    }
+                                                    RadioButton(selected = isSelected, onClick = {
+                                                        SettingsManager.setHistoryTitleMode(mode)
+                                                        showTitleModeDialog = false
+                                                    })
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                confirmButton = {},
+                                dismissButton = {
+                                    TextButton(onClick = { showTitleModeDialog = false }) { Text("Закрыть") }
+                                }
+                            )
+                        }
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 

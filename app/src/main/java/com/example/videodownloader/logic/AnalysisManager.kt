@@ -128,6 +128,13 @@ object AnalysisManager {
             }
         }
 
+        // Проверка наличия активного подключения к интернету
+        if (appContext != null && !com.example.videodownloader.utils.isNetworkAvailable(appContext)) {
+            _isAnalyzing.value = false
+            _errorMessage.value = "Отсутствует подключение к интернету. Проверьте сеть и повторите попытку."
+            return
+        }
+
         _isAnalyzing.value = true
         _errorMessage.value = ""
         _availableQualities.value = emptyList()
@@ -135,32 +142,45 @@ object AnalysisManager {
         _playlistEntries.value = emptyList()
 
         analyzeJob = scope.launch {
-            val result = YtDlpBridge.fetchInfo(targetUrl)
-            _isAnalyzing.value = false
-            if (result.isSuccess) {
-                val meta = result.getOrNull()!!
-                
-                // Сохраняем в кэш
-                analysisCache[targetUrl] = meta to System.currentTimeMillis()
-                // Ограничиваем размер кэша
-                if (analysisCache.size > 5) {
-                    analysisCache.remove(analysisCache.keys.first())
+            try {
+                // Ограничение времени ожидания ответа от сервера до 25 секунд
+                val result = withTimeoutOrNull(25000L) {
+                    YtDlpBridge.fetchInfo(targetUrl)
                 }
+                _isAnalyzing.value = false
 
-                applyMetadata(meta)
+                if (result != null) {
+                    if (result.isSuccess) {
+                        val meta = result.getOrNull()!!
+                        
+                        // Сохраняем в кэш
+                        analysisCache[targetUrl] = meta to System.currentTimeMillis()
+                        if (analysisCache.size > 5) {
+                            analysisCache.remove(analysisCache.keys.first())
+                        }
 
-                // Предзагрузка обложки
-                appContext?.let { ctx ->
-                    if (meta.thumbnailUrl.isNotBlank()) {
-                        val request = ImageRequest.Builder(ctx)
-                            .data(meta.thumbnailUrl)
-                            .crossfade(true)
-                            .build()
-                        Coil.imageLoader(ctx).enqueue(request)
+                        applyMetadata(meta)
+
+                        // Предзагрузка обложки
+                        appContext?.let { ctx ->
+                            if (meta.thumbnailUrl.isNotBlank()) {
+                                val request = ImageRequest.Builder(ctx)
+                                    .data(meta.thumbnailUrl)
+                                    .crossfade(true)
+                                    .build()
+                                Coil.imageLoader(ctx).enqueue(request)
+                            }
+                        }
+                    } else {
+                        _errorMessage.value = result.exceptionOrNull()?.message ?: "Не удалось распознать ссылку"
                     }
+                } else {
+                    _errorMessage.value = "Превышено время ожидания ответа (25 сек). Проверьте интернет-соединение или повторите попытку."
                 }
-            } else {
-                _errorMessage.value = result.exceptionOrNull()?.message ?: "Не удалось распознать ссылку"
+            } catch (e: Exception) {
+                _isAnalyzing.value = false
+                if (e is CancellationException) throw e
+                _errorMessage.value = "Ошибка анализа ссылки: ${e.message}"
             }
         }
     }

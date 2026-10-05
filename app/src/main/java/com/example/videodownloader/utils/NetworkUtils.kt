@@ -51,6 +51,15 @@ fun isWifiConnected(context: Context): Boolean {
            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
 }
 
+fun isNetworkAvailable(context: Context?): Boolean {
+    if (context == null) return true
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        ?: return true
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
+
 fun isIgnoringBatteryOptimizations(context: Context): Boolean {
     val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
     return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false

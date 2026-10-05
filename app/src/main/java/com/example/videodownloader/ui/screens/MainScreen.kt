@@ -2,6 +2,8 @@ package com.example.videodownloader.ui.screens
 
 import android.content.ClipboardManager
 import android.content.Context
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import com.example.videodownloader.performAppHaptic
 import com.example.videodownloader.HapticType
 import android.widget.Toast
@@ -80,27 +82,52 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
     var clipboardUrl by remember { mutableStateOf<String?>(null) }
 
     fun updateClipboardStatus() {
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        if (!clipboard.hasPrimaryClip()) {
-            clipboardUrl = null
-            return
+        try {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+            if (!clipboard.hasPrimaryClip()) {
+                clipboardUrl = null
+                return
+            }
+
+            val clipData = clipboard.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                val item = clipData.getItemAt(0)
+                val clipText = item?.text?.toString() ?: item?.uri?.toString() ?: ""
+
+                val extractedUrl = extractUrlFromText(clipText)
+                if (extractedUrl.isNotBlank() && isValidUrl(extractedUrl)) {
+                    if (extractedUrl != viewModel.dismissedClipboardUrl && extractedUrl != clipboardUrl) {
+                        viewModel.dismissedClipboardUrl = null
+                    }
+                    clipboardUrl = extractedUrl
+                } else {
+                    clipboardUrl = null
+                }
+            } else {
+                clipboardUrl = null
+            }
+        } catch (e: Exception) {
+            AsyncLogger.log(LogLevel.WARN, "Smart clipboard check suppressed: ${e.message}")
         }
-
-        val item = clipboard.primaryClip?.getItemAt(0)
-        val clipText = item?.text?.toString() ?: item?.uri?.toString() ?: ""
-
-        val extractedUrl = extractUrlFromText(clipText)
-        clipboardUrl = if (extractedUrl.isNotBlank() && isValidUrl(extractedUrl)) extractedUrl else null
     }
 
-    LaunchedEffect(Unit) {
+    // Умная проверка буфера обмена с задержкой для получения фокуса окна (Android 10+)
+    LaunchedEffect(lifecycleOwner) {
+        updateClipboardStatus()
+        delay(250.milliseconds)
+        updateClipboardStatus()
+        delay(350.milliseconds)
         updateClipboardStatus()
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                updateClipboardStatus()
+                coroutineScope.launch {
+                    updateClipboardStatus()
+                    delay(300.milliseconds)
+                    updateClipboardStatus()
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

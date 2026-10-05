@@ -168,7 +168,12 @@ object DownloadManager {
         // Передача пути к паспорту метаданных
         val passportPath = CacheManager.getPassportFile(appContext, url).absolutePath
 
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
         val downloadWorkRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
+            .setConstraints(constraints)
             .setInputData(
                 workDataOf(
                     DownloadWorker.KEY_URL to url,
@@ -223,7 +228,12 @@ object DownloadManager {
             
             val passportPath = CacheManager.getPassportFile(appContext, item.url).absolutePath
 
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
             val request = OneTimeWorkRequestBuilder<DownloadWorker>()
+                .setConstraints(constraints)
                 .setInputData(
                     workDataOf(
                         DownloadWorker.KEY_URL to item.url,

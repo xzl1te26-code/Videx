@@ -6,6 +6,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration.Companion.milliseconds
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 import com.example.videodownloader.performAppHaptic
 import com.example.videodownloader.HapticType
 import android.widget.Toast
@@ -105,12 +108,11 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                             return@withContext
                         }
                     }
-                    val result = YtDlpBridge.fetchInfo(currentClip)
-                    if (result.isSuccess) {
-                        clipboardMetadata = result.getOrNull()
-                    } else {
-                        clipboardMetadata = null
-                    }
+
+                    // 🧠 Оптимизация: Для смарт-превью делаем легкий HTTP-запрос (без запуска тяжелого yt-dlp)
+                    // Используем timeout 3 секунды. Если не вышло — просто ничего не показываем
+                    val lightMeta = fetchLightMeta(currentClip)
+                    clipboardMetadata = lightMeta
                 } catch (_: Exception) {
                     clipboardMetadata = null
                 }
@@ -1187,6 +1189,53 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
             }
         }
     }
+}
+
+// 🧠 Облегченный экстрактор метаданных для мини-превью (Работает без yt-dlp)
+private val lightHttpClient = OkHttpClient.Builder()
+    .connectTimeout(3, TimeUnit.SECONDS)
+    .readTimeout(3, TimeUnit.SECONDS)
+    .build()
+
+private fun fetchLightMeta(url: String): VideoMetadata? {
+    try {
+        // Если это TikTok — пробуем получить oEmbed API
+        val reqUrl = if (url.contains("tiktok.com")) {
+            "https://www.tiktok.com/oembed?url=$url"
+        } else {
+            url
+        }
+        
+        val request = Request.Builder()
+            .url(reqUrl)
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            .build()
+            
+        lightHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) return null
+            val body = response.body?.string() ?: return null
+            
+            if (reqUrl.contains("oembed")) {
+                val json = org.json.JSONObject(body)
+                val title = json.optString("title", "")
+                val thumb = json.optString("thumbnail_url", "")
+                if (title.isNotBlank()) return VideoMetadata(title = title, thumbnailUrl = thumb)
+            } else {
+                // Извлекаем title и og:image через регулярки
+                val titleRegex = "<title>(.*?)</title>".toRegex(RegexOption.IGNORE_CASE)
+                val thumbRegex = "<meta\\s+property=\"og:image\"\\s+content=\"(.*?)\"".toRegex(RegexOption.IGNORE_CASE)
+                
+                var title = titleRegex.find(body)?.groupValues?.get(1) ?: ""
+                val thumb = thumbRegex.find(body)?.groupValues?.get(1) ?: ""
+                
+                title = title.replace("&#39;", "'").replace("&quot;", "\"")
+                if (title.isNotBlank()) {
+                    return VideoMetadata(title = title, thumbnailUrl = thumb)
+                }
+            }
+        }
+    } catch (_: Exception) {}
+    return null
 }
 
 @Composable

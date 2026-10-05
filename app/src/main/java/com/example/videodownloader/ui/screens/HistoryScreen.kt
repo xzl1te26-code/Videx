@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -287,6 +288,7 @@ fun HistoryScreen(
 
     val showHistoryThumbnails by SettingsManager.showHistoryThumbnails.collectAsState()
     val showHistorySort by SettingsManager.showHistorySort.collectAsState()
+    val enableHistoryPullToRefresh by SettingsManager.enableHistoryPullToRefresh.collectAsState()
 
     val showStorageStats by SettingsManager.showStorageStats.collectAsState()
     val useInternalPlayer by SettingsManager.useInternalPlayer.collectAsState()
@@ -758,7 +760,20 @@ fun HistoryScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        PullToRefreshBox(
+            isRefreshing = isScanning,
+            onRefresh = {
+                if (enableHistoryPullToRefresh && !isSelectionMode && !isScanning) {
+                    coroutineScope.launch {
+                        isScanning = true
+                        HistoryManager.syncWithStorage(context)
+                        isScanning = false
+                        snackbarHostState.showInstantSnackbar("Синхронизация завершена")
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
+        ) {
             LazyColumn(
                 state = listState, // 📜 ПРИВЯЗЫВАЕМ СОСТОЯНИЕ СКРОЛЛА
                 modifier = Modifier.fillMaxSize(),

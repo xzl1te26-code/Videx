@@ -261,6 +261,18 @@ fun AppearanceSettingsScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
+                        SettingsSwitchRow(
+                            title = "Свайп вниз для синхронизации",
+                            subtitle = "Синхронизация истории с памятью жестом свайпа сверху вниз",
+                            icon = Icons.Default.SwipeDown,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            stateFlow = SettingsManager.enableHistoryPullToRefresh,
+                            onCheckedChange = { SettingsManager.setEnableHistoryPullToRefresh(it) }
+                        )
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
                         var showTitleModeDialog by remember { mutableStateOf(false) }
                         val historyTitleMode by SettingsManager.historyTitleMode.collectAsState()
                         val titleModeText = when (historyTitleMode) {

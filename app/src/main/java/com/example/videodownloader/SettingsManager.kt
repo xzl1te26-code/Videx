@@ -43,6 +43,7 @@ object SettingsManager {
     private const val KEY_USE_CLIPBOARD_HISTORY = "use_clipboard_history"
     private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
     private const val KEY_SHOW_HISTORY_SORT = "show_history_sort"
+    private const val KEY_ENABLE_HISTORY_PULL_TO_REFRESH = "enable_history_pull_to_refresh_v1"
     private const val KEY_HISTORY_TITLE_MODE = "history_title_mode_v1"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
@@ -163,6 +164,9 @@ object SettingsManager {
 
     private val _showHistorySort = MutableStateFlow(true)
     val showHistorySort: StateFlow<Boolean> = _showHistorySort
+
+    private val _enableHistoryPullToRefresh = MutableStateFlow(true)
+    val enableHistoryPullToRefresh: StateFlow<Boolean> = _enableHistoryPullToRefresh
 
     private val _historyTitleMode = MutableStateFlow(HistoryTitleMode.TWO_LINES)
     val historyTitleMode: StateFlow<HistoryTitleMode> = _historyTitleMode
@@ -333,6 +337,7 @@ object SettingsManager {
         _showThumbnails.value = prefs?.getBoolean(KEY_SHOW_THUMBNAILS, true) ?: true
         _showHistoryThumbnails.value = prefs?.getBoolean(KEY_SHOW_HISTORY_THUMBNAILS, true) ?: true
         _showHistorySort.value = prefs?.getBoolean(KEY_SHOW_HISTORY_SORT, true) ?: true
+        _enableHistoryPullToRefresh.value = prefs?.getBoolean(KEY_ENABLE_HISTORY_PULL_TO_REFRESH, true) ?: true
         val titleModeStr = prefs?.getString(KEY_HISTORY_TITLE_MODE, HistoryTitleMode.TWO_LINES.name)
         _historyTitleMode.value = try { HistoryTitleMode.valueOf(titleModeStr!!) } catch (_: Exception) { HistoryTitleMode.TWO_LINES }
         _showStorageStats.value = prefs?.getBoolean(KEY_SHOW_STORAGE_STATS, true) ?: true
@@ -687,6 +692,11 @@ object SettingsManager {
     fun setShowHistorySort(value: Boolean) {
         _showHistorySort.value = value
         prefs?.edit()?.putBoolean(KEY_SHOW_HISTORY_SORT, value)?.apply()
+    }
+
+    fun setEnableHistoryPullToRefresh(value: Boolean) {
+        _enableHistoryPullToRefresh.value = value
+        prefs?.edit()?.putBoolean(KEY_ENABLE_HISTORY_PULL_TO_REFRESH, value)?.apply()
     }
 
     fun setHistoryTitleMode(mode: HistoryTitleMode) {

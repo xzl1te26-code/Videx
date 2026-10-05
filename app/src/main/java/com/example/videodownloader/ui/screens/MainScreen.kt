@@ -302,10 +302,17 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
             val tipFrames by SettingsManager.tipFrames.collectAsState()
             val tipAnimationSpeedMs by SettingsManager.tipAnimationSpeedMs.collectAsState()
             val tipPlaybackMode by SettingsManager.tipPlaybackMode.collectAsState()
+            val tipConfigVersion by SettingsManager.tipConfigVersion.collectAsState()
 
             var phraseIndex by remember { mutableIntStateOf(0) }
+            var lastPlayedVersion by remember { mutableIntStateOf(-1) }
 
-            LaunchedEffect(showDynamicTips, tipFrames, tipAnimationSpeedMs, tipPlaybackMode) {
+            LaunchedEffect(showDynamicTips, tipFrames, tipAnimationSpeedMs, tipPlaybackMode, tipConfigVersion) {
+                if (lastPlayedVersion != tipConfigVersion) {
+                    viewModel.hasTipAnimationPlayedThisSession = false
+                    lastPlayedVersion = tipConfigVersion
+                }
+
                 val shouldAnimate = showDynamicTips && tipFrames.isNotEmpty() && (
                     tipPlaybackMode == com.example.videodownloader.TipPlaybackMode.EVERY_NAVIGATION || !viewModel.hasTipAnimationPlayedThisSession
                 )

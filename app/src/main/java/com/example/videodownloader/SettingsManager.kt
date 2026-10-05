@@ -235,6 +235,9 @@ object SettingsManager {
     private val _tipPlaybackMode = MutableStateFlow(TipPlaybackMode.EVERY_NAVIGATION)
     val tipPlaybackMode: StateFlow<TipPlaybackMode> = _tipPlaybackMode
 
+    private val _tipConfigVersion = MutableStateFlow(0)
+    val tipConfigVersion: StateFlow<Int> = _tipConfigVersion
+
     private val _useInternalPlayer = MutableStateFlow(true)
     val useInternalPlayer: StateFlow<Boolean> = _useInternalPlayer
 
@@ -818,17 +821,20 @@ object SettingsManager {
 
     fun setShowDynamicTips(value: Boolean) {
         _showDynamicTips.value = value
+        _tipConfigVersion.value++
         prefs?.edit()?.putBoolean(KEY_SHOW_DYNAMIC_TIPS, value)?.apply()
     }
 
     fun setTipAnimationSpeedSec(seconds: Float) {
         val ms = (seconds.coerceIn(1.0f, 10.0f) * 1000f).toLong()
         _tipAnimationSpeedMs.value = ms
+        _tipConfigVersion.value++
         prefs?.edit()?.putLong(KEY_TIP_ANIMATION_SPEED_MS, ms)?.apply()
     }
 
     fun setTipPlaybackMode(mode: TipPlaybackMode) {
         _tipPlaybackMode.value = mode
+        _tipConfigVersion.value++
         prefs?.edit()?.putString(KEY_TIP_PLAYBACK_MODE, mode.name)?.apply()
     }
 
@@ -836,6 +842,7 @@ object SettingsManager {
         val sanitized = frames.take(5).filter { it.text.isNotBlank() }
         val finalFrames = if (sanitized.isEmpty()) defaultTipFrames else sanitized
         _tipFrames.value = finalFrames
+        _tipConfigVersion.value++
 
         val encoded = finalFrames.joinToString(";;;") { "${it.iconKey}:::${it.text}" }
         prefs?.edit()?.putString(KEY_TIP_FRAMES_DATA, encoded)?.apply()
@@ -845,6 +852,7 @@ object SettingsManager {
         setTipFrames(defaultTipFrames)
         setTipAnimationSpeedSec(2.4f)
         setTipPlaybackMode(TipPlaybackMode.EVERY_NAVIGATION)
+        _tipConfigVersion.value++
     }
 
     fun setUseInternalPlayer(value: Boolean) {

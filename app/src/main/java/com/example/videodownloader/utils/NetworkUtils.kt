@@ -60,6 +60,36 @@ fun isNetworkAvailable(context: Context?): Boolean {
     return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
+fun translateNetworkError(rawMsg: String?, defaultMsg: String = "Ошибка сети"): String {
+    if (rawMsg.isNullOrBlank()) return defaultMsg
+    val msg = rawMsg.lowercase()
+    return when {
+        msg.contains("unable to resolve host") || 
+        msg.contains("no address associated") || 
+        msg.contains("unknownhostexception") || 
+        msg.contains("network is unreachable") ->
+            "Отсутствует подключение к интернету. Проверьте Wi-Fi или мобильные данные."
+            
+        msg.contains("timeout") || 
+        msg.contains("timed out") || 
+        msg.contains("sockettimeoutexception") ->
+            "Превышено время ожидания ответа от сервера. Интернет слишком слабый или заблокирован."
+            
+        msg.contains("connection closed") || 
+        msg.contains("connection refused") || 
+        msg.contains("connectexception") || 
+        msg.contains("reset by peer") ->
+            "Не удалось подключиться к серверу. Возможно, ресурс заблокирован или временно недоступен."
+            
+        msg.contains("ssl") || 
+        msg.contains("certificate") || 
+        msg.contains("handshake") ->
+            "Ошибка безопасного соединения SSL. Проверьте дату и время на устройстве."
+            
+        else -> if (defaultMsg.isNotBlank() && defaultMsg != "Ошибка сети") defaultMsg else rawMsg
+    }
+}
+
 fun isIgnoringBatteryOptimizations(context: Context): Boolean {
     val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
     return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false

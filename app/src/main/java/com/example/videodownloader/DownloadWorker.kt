@@ -315,10 +315,11 @@ class DownloadWorker(
 
                 ListenableWorker.Result.success()
             } else {
-                val errorMsg = downloadResult?.exceptionOrNull()?.message ?: "Неизвестная ошибка"
-                AsyncLogger.log(LogLevel.ERROR, "DownloadWorker: Ошибка после всех попыток ($attempt): $errorMsg")
+                val rawErrorMsg = downloadResult?.exceptionOrNull()?.message ?: "Неизвестная ошибка"
+                val userErrorMsg = com.example.videodownloader.utils.translateNetworkError(rawErrorMsg, "Ошибка скачивания")
+                AsyncLogger.log(LogLevel.ERROR, "DownloadWorker: Ошибка после всех попыток ($attempt): $rawErrorMsg")
                 notificationManager.cancel(currentNotifId)
-                showErrorNotification(downloadTitle, "Ошибка скачивания: $errorMsg")
+                showErrorNotification(downloadTitle, userErrorMsg)
                 ListenableWorker.Result.failure()
             }
         } finally {

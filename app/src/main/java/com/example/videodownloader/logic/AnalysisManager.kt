@@ -147,6 +147,10 @@ object AnalysisManager {
                 val result = withTimeoutOrNull(25000L) {
                     YtDlpBridge.fetchInfo(targetUrl)
                 }
+
+                //Если анализ был отменен пользователем — выходим без показа ошибок
+                if (!isActive) return@launch
+
                 _isAnalyzing.value = false
 
                 if (result != null) {
@@ -172,15 +176,17 @@ object AnalysisManager {
                             }
                         }
                     } else {
-                        _errorMessage.value = result.exceptionOrNull()?.message ?: "Не удалось распознать ссылку"
+                        val rawErr = result.exceptionOrNull()?.message
+                        _errorMessage.value = com.example.videodownloader.utils.translateNetworkError(rawErr, "Не удалось распознать ссылку")
                     }
                 } else {
                     _errorMessage.value = "Превышено время ожидания ответа (25 сек). Проверьте интернет-соединение или повторите попытку."
                 }
             } catch (e: Exception) {
                 _isAnalyzing.value = false
-                if (e is CancellationException) throw e
-                _errorMessage.value = "Ошибка анализа ссылки: ${e.message}"
+                if (e is CancellationException || !isActive) throw e
+                val rawErr = e.message
+                _errorMessage.value = com.example.videodownloader.utils.translateNetworkError(rawErr, "Ошибка анализа ссылки")
             }
         }
     }

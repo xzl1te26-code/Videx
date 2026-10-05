@@ -110,8 +110,9 @@ object AppUpdateChecker {
                 )
             )
         } catch (e: Exception) {
+            val userMsg = com.example.videodownloader.utils.translateNetworkError(e.message, "Не удалось проверить обновления")
             AsyncLogger.log(LogLevel.ERROR, "AppUpdateChecker error: ${e.message}")
-            Result.failure(e)
+            Result.failure(Exception(userMsg))
         }
     }
 
@@ -197,7 +198,8 @@ object AppUpdateChecker {
             pendingInstallFile = apkFile
             Result.success(apkFile)
         } catch (e: Exception) {
-            Result.failure(e)
+            val userMsg = com.example.videodownloader.utils.translateNetworkError(e.message, "Ошибка скачивания файла обновления")
+            Result.failure(Exception(userMsg))
         }
     }
 

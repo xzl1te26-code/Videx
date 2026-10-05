@@ -141,8 +141,9 @@ object OtaUpdater {
             }
 
         } catch (e: Exception) {
+            val userMsg = com.example.videodownloader.utils.translateNetworkError(e.message, "Ошибка обновления ядра")
             AsyncLogger.log(LogLevel.ERROR, "OTA Ошибка: ${e.message}")
-            Result.failure(e)
+            Result.failure(Exception(userMsg))
         }
     }
 }

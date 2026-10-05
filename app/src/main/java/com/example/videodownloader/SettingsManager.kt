@@ -831,6 +831,8 @@ object SettingsManager {
 
     fun resetTipFrames() {
         setTipFrames(defaultTipFrames)
+        setTipAnimationSpeedSec(2.4f)
+        setTipPlaybackMode(TipPlaybackMode.EVERY_NAVIGATION)
     }
 
     fun setUseInternalPlayer(value: Boolean) {

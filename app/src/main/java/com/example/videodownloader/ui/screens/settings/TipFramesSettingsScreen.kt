@@ -343,7 +343,7 @@ fun TipFramesSettingsScreen(
                                     onClick = { SettingsManager.setTipPlaybackMode(com.example.videodownloader.TipPlaybackMode.EVERY_NAVIGATION) },
                                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                                 ) {
-                                    Text("Каждый раз", fontWeight = FontWeight.Bold)
+                                    Text("Каждый раз", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
 
                                 SegmentedButton(
@@ -351,7 +351,7 @@ fun TipFramesSettingsScreen(
                                     onClick = { SettingsManager.setTipPlaybackMode(com.example.videodownloader.TipPlaybackMode.APP_LAUNCH_ONLY) },
                                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                                 ) {
-                                    Text("Только при запуске", fontWeight = FontWeight.Bold)
+                                    Text("При запуске", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                         }

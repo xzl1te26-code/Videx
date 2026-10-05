@@ -3,6 +3,8 @@ package com.example.videodownloader.ui.screens
 import android.content.ClipboardManager
 import android.content.Context
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration.Companion.milliseconds
 import com.example.videodownloader.performAppHaptic
 import com.example.videodownloader.HapticType
@@ -77,9 +79,42 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
     val showQualitySelector by SettingsManager.showQualitySelector.collectAsState()
     val checkDuplicates by SettingsManager.checkDuplicates.collectAsState()
     val useClipboardBubble by SettingsManager.useClipboardBubble.collectAsState()
+    val useClipboardPreview by SettingsManager.useClipboardPreview.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     var clipboardUrl by remember { mutableStateOf<String?>(null) }
+    var clipboardMetadata by remember { mutableStateOf<VideoMetadata?>(null) }
+
+    LaunchedEffect(clipboardUrl, useClipboardPreview) {
+        val currentClip = clipboardUrl
+        if (useClipboardPreview && !currentClip.isNullOrBlank()) {
+            withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val passportFile = CacheManager.getPassportFile(context, currentClip)
+                    if (passportFile.exists()) {
+                        val jsonStr = passportFile.readText()
+                        val json = org.json.JSONObject(jsonStr)
+                        val title = json.optString("title", "")
+                        val thumb = json.optString("thumbnail", "")
+                        if (title.isNotBlank()) {
+                            clipboardMetadata = VideoMetadata(title = title, thumbnailUrl = thumb)
+                            return@withContext
+                        }
+                    }
+                    val result = YtDlpBridge.fetchInfo(currentClip)
+                    if (result.isSuccess) {
+                        clipboardMetadata = result.getOrNull()
+                    } else {
+                        clipboardMetadata = null
+                    }
+                } catch (_: Exception) {
+                    clipboardMetadata = null
+                }
+            }
+        } else {
+            clipboardMetadata = null
+        }
+    }
 
     fun updateClipboardStatus() {
         try {
@@ -541,35 +576,83 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                                     Spacer(modifier = Modifier.height(14.dp))
 
-                                    // Полностью плоский, бесшовный прозрачный Row для текста ссылки (без конфликтующих фонов подслоев)
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
-                                                RoundedCornerShape(12.dp)
+                                    if (useClipboardPreview && clipboardMetadata != null) {
+                                        val meta = clipboardMetadata!!
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                                    RoundedCornerShape(16.dp)
+                                                )
+                                                .padding(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            if (meta.thumbnailUrl.isNotBlank()) {
+                                                AsyncImage(
+                                                    model = meta.thumbnailUrl,
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(width = 80.dp, height = 56.dp)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                            }
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = meta.title,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = clipUrl,
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                        letterSpacing = 0.1.sp
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+                                                    RoundedCornerShape(12.dp)
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Link,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(14.dp)
                                             )
-                                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Link,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = clipUrl,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                                letterSpacing = 0.1.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.weight(1f)
-                                        )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = clipUrl,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                    letterSpacing = 0.1.sp
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
                                     }
 
                                     Spacer(modifier = Modifier.height(14.dp))

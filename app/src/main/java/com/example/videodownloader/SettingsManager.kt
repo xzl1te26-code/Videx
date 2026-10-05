@@ -37,6 +37,7 @@ object SettingsManager {
     private const val KEY_USE_SPONSORBLOCK = "use_sponsorblock"
     private const val KEY_USE_IMPERSONATE = "use_impersonate"
     private const val KEY_USE_CLIPBOARD_BUBBLE = "use_clipboard_bubble"
+    private const val KEY_USE_CLIPBOARD_PREVIEW = "use_clipboard_preview"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
     private const val KEY_PIP_ACTIONS_ENABLED = "pip_actions_enabled"
@@ -188,6 +189,9 @@ object SettingsManager {
     private val _useClipboardBubble = MutableStateFlow(true)
     val useClipboardBubble: StateFlow<Boolean> = _useClipboardBubble
 
+    private val _useClipboardPreview = MutableStateFlow(true)
+    val useClipboardPreview: StateFlow<Boolean> = _useClipboardPreview
+
     private val _showDynamicTips = MutableStateFlow(true)
     val showDynamicTips: StateFlow<Boolean> = _showDynamicTips
 
@@ -337,6 +341,7 @@ object SettingsManager {
         _useSponsorBlock.value = prefs?.getBoolean(KEY_USE_SPONSORBLOCK, false) ?: false
         _useImpersonate.value = prefs?.getBoolean(KEY_USE_IMPERSONATE, true) ?: true
         _useClipboardBubble.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_BUBBLE, true) ?: true
+        _useClipboardPreview.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_PREVIEW, true) ?: true
         _showDynamicTips.value = prefs?.getBoolean(KEY_SHOW_DYNAMIC_TIPS, true) ?: true
 
         val encodedFrames = prefs?.getString(KEY_TIP_FRAMES_DATA, null)
@@ -715,6 +720,11 @@ object SettingsManager {
     fun setUseClipboardBubble(value: Boolean) {
         _useClipboardBubble.value = value
         prefs?.edit()?.putBoolean(KEY_USE_CLIPBOARD_BUBBLE, value)?.apply()
+    }
+
+    fun setUseClipboardPreview(value: Boolean) {
+        _useClipboardPreview.value = value
+        prefs?.edit()?.putBoolean(KEY_USE_CLIPBOARD_PREVIEW, value)?.apply()
     }
 
     fun setShowDynamicTips(value: Boolean) {

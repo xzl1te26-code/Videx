@@ -266,6 +266,18 @@ fun AppearanceSettingsScreen(
                             stateFlow = SettingsManager.useClipboardBubble,
                             onCheckedChange = { SettingsManager.setUseClipboardBubble(it) }
                         )
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                        SettingsSwitchRow(
+                            title = "Мини-превью ссылки из буфера",
+                            subtitle = "Загружать обложку и название ролика прямо в плашке смарт-буфера",
+                            icon = Icons.Default.Preview,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            stateFlow = SettingsManager.useClipboardPreview,
+                            onCheckedChange = { SettingsManager.setUseClipboardPreview(it) }
+                        )
                     }
                 }
             }

@@ -482,9 +482,6 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         },
                         singleLine = true,
                         enabled = !isAnalyzing,
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(
-                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
-                        ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -627,27 +624,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // Эстетичная парящая кнопка закрытия в едином вертикальном выравнивании с шапкой
-                                        Surface(
-                                            onClick = {
-                                                view.performAppHaptic(HapticType.CLICK)
-                                                viewModel.dismissedClipboardUrl = clipUrl
-                                            },
-                                            modifier = Modifier.size(28.dp),
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Icon(
-                                                    Icons.Default.Close,
-                                                    contentDescription = "Скрыть",
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                                    modifier = Modifier.size(14.dp)
-                                                )
-                                            }
-                                        }
+                                        // Пространство под кнопку закрытия
+                                        Spacer(modifier = Modifier.width(36.dp))
                                     }
 
                                     Spacer(modifier = Modifier.height(14.dp))
@@ -763,6 +741,29 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 letterSpacing = 0.5.sp
                                             )
                                         }
+                                    }
+                                }
+
+                                // Идеально центрированная парящая кнопка закрытия (согласована по высоте с логотипом платформы)
+                                Surface(
+                                    onClick = {
+                                        view.performAppHaptic(HapticType.CLICK)
+                                        viewModel.dismissedClipboardUrl = clipUrl
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 22.dp, end = 16.dp)
+                                        .size(28.dp),
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = "Скрыть",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(14.dp)
+                                        )
                                     }
                                 }
                             }

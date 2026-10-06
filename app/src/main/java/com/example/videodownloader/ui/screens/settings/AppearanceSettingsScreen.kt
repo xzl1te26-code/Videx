@@ -424,6 +424,166 @@ fun AppearanceSettingsScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
+                        var showTileActionDialog by remember { mutableStateOf(false) }
+                        val tileAction by SettingsManager.tileAction.collectAsState()
+                        val tileActionSubtitle = when (tileAction) {
+                            com.example.videodownloader.TileAction.SMART_DOWNLOAD -> "Мгновенное скачивание из буфера"
+                            com.example.videodownloader.TileAction.OPEN_ANALYSIS -> "Открыть анализ в приложении"
+                        }
+
+                        SettingsNavigationRow(
+                            title = "Плитка в быстрой шторке",
+                            subtitle = tileActionSubtitle,
+                            icon = Icons.Default.CloudDownload,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = { showTileActionDialog = true }
+                        )
+
+                        if (showTileActionDialog) {
+                            val tileOptions = listOf(
+                                Triple(com.example.videodownloader.TileAction.SMART_DOWNLOAD, "Мгновенное скачивание из буфера", "Автоматически качать ссылку из буфера обмена в фоне"),
+                                Triple(com.example.videodownloader.TileAction.OPEN_ANALYSIS, "Открыть анализ в приложении", "Запустить Videx и вставить ссылку из буфера для выбора качества")
+                            )
+
+                            ModalBottomSheet(
+                                onDismissRequest = { showTileActionDialog = false },
+                                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                                dragHandle = {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(vertical = 10.dp)
+                                            .width(36.dp)
+                                            .height(4.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                                    )
+                                }
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp)
+                                        .padding(bottom = 28.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CloudDownload,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(14.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Плитка в быстрой шторке",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                            Text(
+                                                text = "Действие при нажатии переключателя в шторке Android",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), modifier = Modifier.padding(bottom = 4.dp))
+
+                                    tileOptions.forEach { (action, title, subtitle) ->
+                                        val isSelected = tileAction == action
+                                        val icon = when (action) {
+                                            com.example.videodownloader.TileAction.SMART_DOWNLOAD -> Icons.Default.FlashOn
+                                            com.example.videodownloader.TileAction.OPEN_ANALYSIS -> Icons.Default.OpenInNew
+                                        }
+
+                                        Surface(
+                                            onClick = {
+                                                SettingsManager.setTileAction(action)
+                                                showTileActionDialog = false
+                                            },
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        icon,
+                                                        contentDescription = null,
+                                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(14.dp))
+
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = title,
+                                                        fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = subtitle,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(12.dp))
+
+                                                RadioButton(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        SettingsManager.setTileAction(action)
+                                                        showTileActionDialog = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Button(
+                                        onClick = { showTileActionDialog = false },
+                                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                                        shape = RoundedCornerShape(14.dp)
+                                    ) {
+                                        Text("Готово", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
                         var showTitleModeDialog by remember { mutableStateOf(false) }
                         val historyTitleMode by SettingsManager.historyTitleMode.collectAsState()
                         val titleModeText = when (historyTitleMode) {

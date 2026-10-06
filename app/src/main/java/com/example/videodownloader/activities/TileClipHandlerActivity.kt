@@ -15,9 +15,21 @@ import com.example.videodownloader.utils.isValidUrl
 
 class TileClipHandlerActivity : ComponentActivity() {
 
+    private var hasProcessed = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && !hasProcessed) {
+            hasProcessed = true
+            processClipboard()
+        }
+    }
+
+    private fun processClipboard() {
         try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
             val rawText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""

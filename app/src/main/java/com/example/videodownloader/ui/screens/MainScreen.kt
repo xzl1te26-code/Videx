@@ -529,9 +529,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                             // Шапка карточки: Иконка платформы + Название + Кнопки действий справа
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.Top // КРИТИЧЕСКИ ВАЖНО: Выравнивание по верхнему краю для эталонной сетки
                             ) {
-                                // Сама иконка платформы в круглом Material-контейнере
+                                // ЛЕВО: Сама иконка платформы
                                 Surface(
                                     modifier = Modifier.size(40.dp),
                                     shape = CircleShape,
@@ -554,8 +554,12 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
+                                // ЦЕНТР: Текстовый блок
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.height(26.dp), // Фиксируем высоту первой строки текста
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Text(
                                             text = clipPlatform,
                                             style = MaterialTheme.typography.titleMedium,
@@ -579,7 +583,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             )
                                         }
                                     }
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    
                                     Text(
                                         text = "Смарт-детектор обнаружил ссылку",
                                         style = MaterialTheme.typography.labelSmall,
@@ -589,7 +593,11 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                                 Spacer(modifier = Modifier.width(8.dp))
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                // ПРАВО: Кнопки
+                                Row(
+                                    modifier = Modifier.height(28.dp), // Центруем ровно по высоте первой строки текста (26dp+2dp padding)
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     if (useClipboardHistory && recentClipboardUrls.size > 1) {
                                         Surface(
                                             onClick = {
@@ -772,53 +780,71 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                 exit = shrinkVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeOut()
             ) {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f)),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
                 ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.error),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onError,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.error),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onError,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.width(12.dp))
+                            
                             Text(
                                 text = "Ошибка ссылки",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.weight(1f)
                             )
-                            Text(
-                                text = errorMessage,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
-                                lineHeight = 16.sp
-                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            Surface(
+                                onClick = { AnalysisManager.clearError() },
+                                modifier = Modifier.size(28.dp),
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.12f)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Скрыть",
+                                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
                         }
-                        IconButton(onClick = { AnalysisManager.clearError() }) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Скрыть",
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
+                        
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
+                            lineHeight = 16.sp,
+                            modifier = Modifier.padding(start = 48.dp, top = 4.dp)
+                        )
                     }
                 }
             }

@@ -61,7 +61,7 @@
 
         <activity
             android:name=".activities.TileClipHandlerActivity"
-            android:theme="@android:style/Theme.NoDisplay"
+            android:theme="@style/Theme.App.Transparent"
             android:exported="false"
             android:excludeFromRecents="true"
             android:finishOnTaskLaunch="true"

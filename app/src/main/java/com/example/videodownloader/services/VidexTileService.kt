@@ -40,8 +40,9 @@ class VidexTileService : TileService() {
             if (action == TileAction.OPEN_ANALYSIS) {
                 // Прямой запуск Главного экрана без промежуточных окон
                 val intent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     putExtra("navigate_to", "home")
+                    putExtra("force_clipboard_analyze", true)
                 }
                 val pendingIntent = PendingIntent.getActivity(
                     this, 0, intent,

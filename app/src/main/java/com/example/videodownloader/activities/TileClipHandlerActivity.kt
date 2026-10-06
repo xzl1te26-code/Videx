@@ -15,9 +15,26 @@ import com.example.videodownloader.utils.isValidUrl
 
 class TileClipHandlerActivity : ComponentActivity() {
 
+    private var hasProcessed = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
         super.onCreate(savedInstanceState)
-        processClipboard()
+    }
+
+    override fun finish() {
+        super.finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && !hasProcessed) {
+            hasProcessed = true
+            processClipboard()
+        }
     }
 
     private fun processClipboard() {

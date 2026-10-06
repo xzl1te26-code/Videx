@@ -1146,14 +1146,18 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Недавно скопированные ссылки",
+                            text = "История ссылок",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Выберите ссылку для мгновенного анализа",
+                            text = "Нажмите для быстрого анализа",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     if (recentClipboardUrls.isNotEmpty()) {
@@ -1170,23 +1174,22 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                AnimatedContent(
+                Crossfade(
                     targetState = recentClipboardUrls.isEmpty(),
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(300)) + expandVertically()).togetherWith(fadeOut(animationSpec = tween(200)) + shrinkVertically())
-                    },
+                    animationSpec = tween(300),
+                    modifier = Modifier.animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
                     label = "RecentUrlsEmptyStateAnim"
                 ) { isEmpty ->
                     if (isEmpty) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 24.dp),
+                                .padding(vertical = 32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(52.dp)
+                                    .size(56.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                                 contentAlignment = Alignment.Center
@@ -1194,15 +1197,15 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 Icon(
                                     Icons.Default.HistoryToggleOff,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                    modifier = Modifier.size(26.dp)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
                             Text(
                                 text = "История скопированных ссылок пуста",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -1226,9 +1229,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .animateItem(
-                                            fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                            fadeOutSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                            fadeInSpec = tween(250, easing = LinearOutSlowInEasing),
+                                            fadeOutSpec = tween(200, easing = FastOutLinearInEasing),
+                                            placementSpec = spring(dampingRatio = 0.8f, stiffness = 300f)
                                         )
                                 ) {
                                     Row(

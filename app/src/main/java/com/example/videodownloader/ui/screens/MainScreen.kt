@@ -853,17 +853,39 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
         item {
             AnimatedVisibility(
                 visible = errorMessage.isBlank() && (isCurrentUrlValid || isDownloading),
-                enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) + fadeIn() + scaleIn(initialScale = 0.95f),
-                exit = shrinkVertically() + fadeOut() + scaleOut(targetScale = 0.95f)
+                enter = expandVertically(
+                    animationSpec = spring(dampingRatio = 0.9f, stiffness = 250f),
+                    expandFrom = Alignment.Top
+                ) + fadeIn(tween(250)),
+                exit = shrinkVertically(
+                    animationSpec = tween(250),
+                    shrinkTowards = Alignment.Top
+                ) + fadeOut(tween(250))
             ) {
-                Card(modifier = Modifier.fillMaxWidth().animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Crossfade(targetState = isAnalyzing, animationSpec = tween(350), label = "SkeletonCrossfade") { analyzing ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp), 
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)), 
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize(animationSpec = spring(dampingRatio = 0.9f, stiffness = 250f))
+                            .padding(16.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = isAnalyzing, 
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                            },
+                            label = "SkeletonTransition"
+                        ) { analyzing ->
                             if (analyzing) {
                                 MediaCardSkeleton(showThumbnails = showThumbnails)
                             } else if (resultTitle.isNotBlank() || isDownloading) {
                                 Column {
-                                    AnimatedVisibility(visible = showThumbnails && resultThumbnail.isNotBlank(), enter = expandVertically() + fadeIn(animationSpec = tween(400)), exit = shrinkVertically() + fadeOut()) {
+                                    if (showThumbnails && resultThumbnail.isNotBlank()) {
                                         Column {
                                             Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))) {
                                                 AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(resultThumbnail).crossfade(600).build(), contentDescription = "Обложка", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
@@ -940,7 +962,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     AnimatedContent(
                                         targetState = isCurrentDownloadActive,
                                         transitionSpec = {
-                                            (fadeIn(animationSpec = tween(300)) + expandVertically()) togetherWith (fadeOut(animationSpec = tween(200)) + shrinkVertically())
+                                            fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
                                         },
                                         label = "DownloadCardVsButtonsTransition"
                                     ) { isDownloadingActive ->
@@ -1014,7 +1036,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                     val buttonText = when { isPlaylist -> "Открыть плейлист"; isPhotoPost -> "Скачать все фото"; resultTitle.isNotEmpty() -> "Скачать видео"; else -> "Скачать публикацию" }
                                                     Text(text = buttonText, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 }
-                                                AnimatedVisibility(visible = !isPlaylist && !isPhotoPost, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                                                if (!isPlaylist && !isPhotoPost) {
                                                     FilledTonalButton(
                                                         onClick = {
                                                             DownloadManager.startDownload(

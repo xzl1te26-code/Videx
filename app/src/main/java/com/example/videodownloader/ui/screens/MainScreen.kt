@@ -482,6 +482,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         },
                         singleLine = true,
                         enabled = !isAnalyzing,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
+                        ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -623,9 +626,28 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                             )
                                         }
-                                        
-                                        // Оставляем пустой Spacer справа под кнопку закрытия, чтобы текст не наползал
-                                        Spacer(modifier = Modifier.width(28.dp))
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Эстетичная парящая кнопка закрытия в едином вертикальном выравнивании с шапкой
+                                        Surface(
+                                            onClick = {
+                                                view.performAppHaptic(HapticType.CLICK)
+                                                viewModel.dismissedClipboardUrl = clipUrl
+                                            },
+                                            modifier = Modifier.size(28.dp),
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = "Скрыть",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
                                     }
 
                                     Spacer(modifier = Modifier.height(14.dp))
@@ -741,29 +763,6 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 letterSpacing = 0.5.sp
                                             )
                                         }
-                                    }
-                                }
-
-                                // Эстетичная парящая кнопка закрытия в углу с мягкой круглой подложкой
-                                Surface(
-                                    onClick = {
-                                        view.performAppHaptic(HapticType.CLICK)
-                                        viewModel.dismissedClipboardUrl = clipUrl
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(top = 12.dp, end = 12.dp)
-                                        .size(28.dp),
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = "Скрыть",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(14.dp)
-                                        )
                                     }
                                 }
                             }
@@ -1152,85 +1151,122 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                if (recentClipboardUrls.isEmpty()) {
-                    Text(
-                        text = "История скопированных ссылок пуста",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.heightIn(max = 280.dp)
-                    ) {
-                        items(recentClipboardUrls) { itemUrl ->
-                            val itemPlatform = remember(itemUrl) { detectPlatformName(itemUrl) }
-                            Surface(
-                                onClick = {
-                                    view.performAppHaptic(HapticType.CLICK)
-                                    AnalysisManager.setUrl(itemUrl)
-                                    focusManager.clearFocus()
-                                    showRecentHistorySheet = false
-                                },
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                                modifier = Modifier.fillMaxWidth()
+                AnimatedContent(
+                    targetState = recentClipboardUrls.isEmpty(),
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(300)) + expandVertically()).togetherWith(fadeOut(animationSpec = tween(200)) + shrinkVertically())
+                    },
+                    label = "RecentUrlsEmptyStateAnim"
+                ) { isEmpty ->
+                    if (isEmpty) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                Icon(
+                                    Icons.Default.HistoryToggleOff,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "История скопированных ссылок пуста",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.heightIn(max = 290.dp)
+                        ) {
+                            items(recentClipboardUrls, key = { it }) { itemUrl ->
+                                val itemPlatform = remember(itemUrl) { detectPlatformName(itemUrl) }
+                                Surface(
+                                    onClick = {
+                                        view.performAppHaptic(HapticType.CLICK)
+                                        AnalysisManager.setUrl(itemUrl)
+                                        focusManager.clearFocus()
+                                        showRecentHistorySheet = false
+                                    },
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem(
+                                            fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                            fadeOutSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )
                                 ) {
-                                    Surface(
-                                        modifier = Modifier.size(32.dp),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
+                                        Surface(
+                                            modifier = Modifier.size(32.dp),
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primaryContainer
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = when {
+                                                        itemPlatform.contains("YouTube", ignoreCase = true) -> Icons.Default.PlayArrow
+                                                        itemPlatform.contains("TikTok", ignoreCase = true) -> Icons.Default.MusicNote
+                                                        itemPlatform.contains("Instagram", ignoreCase = true) -> Icons.Default.PhotoLibrary
+                                                        else -> Icons.Default.Link
+                                                    },
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = itemPlatform,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = itemUrl,
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                view.performAppHaptic(HapticType.CLICK)
+                                                SettingsManager.removeRecentClipboardUrl(itemUrl)
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
                                             Icon(
-                                                imageVector = when {
-                                                    itemPlatform.contains("YouTube", ignoreCase = true) -> Icons.Default.PlayArrow
-                                                    itemPlatform.contains("TikTok", ignoreCase = true) -> Icons.Default.MusicNote
-                                                    itemPlatform.contains("Instagram", ignoreCase = true) -> Icons.Default.PhotoLibrary
-                                                    else -> Icons.Default.Link
-                                                },
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                Icons.Default.Close,
+                                                contentDescription = "Удалить",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                                 modifier = Modifier.size(16.dp)
                                             )
                                         }
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = itemPlatform,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = itemUrl,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            SettingsManager.removeRecentClipboardUrl(itemUrl)
-                                        },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = "Удалить",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(16.dp)
-                                        )
                                     }
                                 }
                             }

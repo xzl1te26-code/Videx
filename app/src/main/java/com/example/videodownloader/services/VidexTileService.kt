@@ -35,51 +35,25 @@ class VidexTileService : TileService() {
         val tile = qsTile ?: return
 
         try {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            val rawText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""
-            val cleanUrl = com.example.videodownloader.utils.extractUrlFromText(rawText)
+            tile.state = Tile.STATE_ACTIVE
+            tile.label = "Анализ..."
+            tile.updateTile()
 
-            if (cleanUrl.isNotBlank() && isValidUrl(cleanUrl)) {
-                val action = SettingsManager.tileAction.value
-                if (action == TileAction.SMART_DOWNLOAD) {
-                    tile.state = Tile.STATE_ACTIVE
-                    tile.label = "Анализ..."
-                    tile.updateTile()
-
-                    DownloadManager.startDownload(
-                        context = applicationContext,
-                        url = cleanUrl,
-                        title = "Загрузка из плитки",
-                        isAudio = false,
-                        quality = SettingsManager.preferredVideoQuality.value
-                    )
-
-                    Toast.makeText(applicationContext, "Ссылка отправлена на скачивание", Toast.LENGTH_SHORT).show()
-
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        updateTileState()
-                    }, 1500)
-                } else {
-                    val intent = Intent(this, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        putExtra("navigate_to", "home")
-                        putExtra("url_to_analyze", cleanUrl)
-                    }
-                    val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-                    launchActivity(intent, pendingIntent)
-                }
-            } else {
-                tile.label = "Буфер пуст"
-                tile.updateTile()
-                Toast.makeText(applicationContext, "В буфере обмена нет поддерживаемой ссылки", Toast.LENGTH_SHORT).show()
-
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    updateTileState()
-                }, 1500)
+            val intent = Intent(this, com.example.videodownloader.activities.TileClipHandlerActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            val pendingIntent = PendingIntent.getActivity(
+                this, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            launchActivity(intent, pendingIntent)
+
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                updateTileState()
+            }, 1500)
         } catch (e: Exception) {
             updateTileState()
-            Toast.makeText(applicationContext, "Ошибка чтения буфера: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, "Ошибка вызова плитки: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

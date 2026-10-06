@@ -427,12 +427,12 @@ fun AppearanceSettingsScreen(
                         var showTileActionDialog by remember { mutableStateOf(false) }
                         val tileAction by SettingsManager.tileAction.collectAsState()
                         val tileActionSubtitle = when (tileAction) {
-                            com.example.videodownloader.TileAction.SMART_DOWNLOAD -> "Мгновенное скачивание из буфера"
-                            com.example.videodownloader.TileAction.OPEN_ANALYSIS -> "Открыть анализ в приложении"
+                            com.example.videodownloader.TileAction.SMART_DOWNLOAD -> "Скачивание в фоне"
+                            com.example.videodownloader.TileAction.OPEN_ANALYSIS -> "Открыть в приложении"
                         }
 
                         SettingsNavigationRow(
-                            title = "Плитка в быстрой шторке",
+                            title = "Плитка в шторке",
                             subtitle = tileActionSubtitle,
                             icon = Icons.Default.CloudDownload,
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -442,8 +442,8 @@ fun AppearanceSettingsScreen(
 
                         if (showTileActionDialog) {
                             val tileOptions = listOf(
-                                Triple(com.example.videodownloader.TileAction.SMART_DOWNLOAD, "Мгновенное скачивание из буфера", "Автоматически качать ссылку из буфера обмена в фоне"),
-                                Triple(com.example.videodownloader.TileAction.OPEN_ANALYSIS, "Открыть анализ в приложении", "Запустить Videx и вставить ссылку из буфера для выбора качества")
+                                Triple(com.example.videodownloader.TileAction.SMART_DOWNLOAD, "Скачивание в фоне", "Авто-выкачка ссылки из буфера"),
+                                Triple(com.example.videodownloader.TileAction.OPEN_ANALYSIS, "Открыть в приложении", "Вставить ссылку и выбрать качество")
                             )
 
                             ModalBottomSheet(

@@ -36,9 +36,10 @@ class VidexTileService : TileService() {
 
         try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            val text = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""
+            val rawText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""
+            val cleanUrl = com.example.videodownloader.utils.extractUrlFromText(rawText)
 
-            if (text.isNotBlank() && isValidUrl(text)) {
+            if (cleanUrl.isNotBlank() && isValidUrl(cleanUrl)) {
                 val action = SettingsManager.tileAction.value
                 if (action == TileAction.SMART_DOWNLOAD) {
                     tile.state = Tile.STATE_ACTIVE
@@ -47,7 +48,7 @@ class VidexTileService : TileService() {
 
                     DownloadManager.startDownload(
                         context = applicationContext,
-                        url = text,
+                        url = cleanUrl,
                         title = "Загрузка из плитки",
                         isAudio = false,
                         quality = SettingsManager.preferredVideoQuality.value
@@ -62,7 +63,7 @@ class VidexTileService : TileService() {
                     val intent = Intent(this, MainActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         putExtra("navigate_to", "home")
-                        putExtra("url_to_analyze", text)
+                        putExtra("url_to_analyze", cleanUrl)
                     }
                     val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                     launchActivity(intent, pendingIntent)

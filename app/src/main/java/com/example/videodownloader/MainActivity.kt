@@ -631,6 +631,16 @@ fun AppNavigation(
         label = "DynamicSnackbarPadding"
     )
 
+    var lastBaseScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+    val baseScreen = remember(currentScreen) {
+        if (currentScreen in listOf(Screen.Player, Screen.Gallery, Screen.AudioPlayer)) {
+            lastBaseScreen
+        } else {
+            lastBaseScreen = currentScreen
+            currentScreen
+        }
+    }
+
     val isMediaScreen = currentScreen in listOf(Screen.Player, Screen.Gallery, Screen.AudioPlayer)
     val listScale by animateFloatAsState(
         targetValue = if (isMediaScreen) 0.94f else 1f,
@@ -682,7 +692,7 @@ fun AppNavigation(
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
             ) {
                 AnimatedContent(
-                    targetState = currentScreen,
+                    targetState = baseScreen,
                     label = "ScreenTransition",
                     transitionSpec = {
                         if (targetState !in listOf(Screen.Home, Screen.History, Screen.Settings) || initialState !in listOf(Screen.Home, Screen.History, Screen.Settings)) {

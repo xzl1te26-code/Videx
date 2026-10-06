@@ -398,7 +398,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIncomingIntent(intent: Intent?): Boolean {
-        if (intent?.getBooleanExtra("force_clipboard_analyze", false) == true || intent?.getStringExtra("action") == "paste_link") {
+        if (intent?.getStringExtra("action") == "paste_link") {
             pendingIntentAction = {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
@@ -406,7 +406,7 @@ class MainActivity : ComponentActivity() {
                 if (cleanUrl.isNotBlank() && isValidUrl(cleanUrl)) {
                     AnalysisManager.onIncomingUrl(cleanUrl, autoAnalyze = true)
                 } else {
-                    Toast.makeText(this, "В буфере обмена нет поддерживаемой ссылки", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Буфер обмена пуст или не содержит ссылки", Toast.LENGTH_SHORT).show()
                 }
             }
             return false

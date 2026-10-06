@@ -15,7 +15,6 @@ enum class MinDiskSpace(val bytes: Long) { NONE(0L), MB500(500L * 1024 * 1024), 
 enum class AppTheme { SYSTEM, DARK, LIGHT }
 enum class HistoryTitleMode { TWO_LINES, MARQUEE, SINGLE_LINE }
 enum class HistorySyncMode { BOTH, SWIPE_ONLY, BUTTON_ONLY }
-enum class TileAction { SMART_DOWNLOAD, OPEN_ANALYSIS }
 enum class TipPlaybackMode { EVERY_NAVIGATION, APP_LAUNCH_ONLY }
 enum class HapticIntensity { SOFT, STANDARD, STRONG }
 enum class HapticType { CLICK, LONG_PRESS, PLAYER_GESTURE, SUCCESS, SELECTION }
@@ -46,7 +45,6 @@ object SettingsManager {
     private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
     private const val KEY_SHOW_HISTORY_SORT = "show_history_sort"
     private const val KEY_HISTORY_SYNC_MODE = "history_sync_mode_v1"
-    private const val KEY_TILE_ACTION = "tile_action_v1"
     private const val KEY_HISTORY_TITLE_MODE = "history_title_mode_v1"
     private const val KEY_USE_INTERNAL_PLAYER = "use_internal_player"
     private const val KEY_PIP_ENABLED = "pip_enabled"
@@ -170,9 +168,6 @@ object SettingsManager {
 
     private val _historySyncMode = MutableStateFlow(HistorySyncMode.BOTH)
     val historySyncMode: StateFlow<HistorySyncMode> = _historySyncMode
-
-    private val _tileAction = MutableStateFlow(TileAction.SMART_DOWNLOAD)
-    val tileAction: StateFlow<TileAction> = _tileAction
 
     private val _historyTitleMode = MutableStateFlow(HistoryTitleMode.TWO_LINES)
     val historyTitleMode: StateFlow<HistoryTitleMode> = _historyTitleMode
@@ -348,8 +343,6 @@ object SettingsManager {
         _showHistorySort.value = prefs?.getBoolean(KEY_SHOW_HISTORY_SORT, true) ?: true
         val syncModeStr = prefs?.getString(KEY_HISTORY_SYNC_MODE, HistorySyncMode.BOTH.name)
         _historySyncMode.value = try { HistorySyncMode.valueOf(syncModeStr!!) } catch (_: Exception) { HistorySyncMode.BOTH }
-        val tileActStr = prefs?.getString(KEY_TILE_ACTION, TileAction.SMART_DOWNLOAD.name)
-        _tileAction.value = try { TileAction.valueOf(tileActStr!!) } catch (_: Exception) { TileAction.SMART_DOWNLOAD }
         val titleModeStr = prefs?.getString(KEY_HISTORY_TITLE_MODE, HistoryTitleMode.TWO_LINES.name)
         _historyTitleMode.value = try { HistoryTitleMode.valueOf(titleModeStr!!) } catch (_: Exception) { HistoryTitleMode.TWO_LINES }
         _showStorageStats.value = prefs?.getBoolean(KEY_SHOW_STORAGE_STATS, true) ?: true
@@ -709,11 +702,6 @@ object SettingsManager {
     fun setHistorySyncMode(mode: HistorySyncMode) {
         _historySyncMode.value = mode
         prefs?.edit()?.putString(KEY_HISTORY_SYNC_MODE, mode.name)?.apply()
-    }
-
-    fun setTileAction(action: TileAction) {
-        _tileAction.value = action
-        prefs?.edit()?.putString(KEY_TILE_ACTION, action.name)?.apply()
     }
 
     fun setHistoryTitleMode(mode: HistoryTitleMode) {

@@ -34,17 +34,6 @@
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
 
-        <service
-            android:name=".services.VidexTileService"
-            android:label="@string/tile_download_label"
-            android:icon="@drawable/ic_download_tile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-
         <receiver
             android:name=".NotificationReceiver"
             android:exported="false" />
@@ -58,14 +47,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
-        <activity
-            android:name=".activities.TileClipHandlerActivity"
-            android:theme="@style/Theme.App.Transparent"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:finishOnTaskLaunch="true"
-            android:noHistory="true" />
 
         <activity
             android:name=".MainActivity"

@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Videx</string>
-    <string name="tile_download_label">Videx: Скачать</string>
 
     <!-- General -->
     <string name="back_content_description">Назад</string>

@@ -35,22 +35,38 @@ class VidexTileService : TileService() {
         val tile = qsTile ?: return
 
         try {
-            tile.state = Tile.STATE_ACTIVE
-            tile.label = "Анализ..."
-            tile.updateTile()
+            val action = SettingsManager.tileAction.value
 
-            val intent = Intent(this, com.example.videodownloader.activities.TileClipHandlerActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            if (action == TileAction.OPEN_ANALYSIS) {
+                // Прямой запуск Главного экрана без промежуточных окон
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("navigate_to", "home")
+                }
+                val pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                launchActivity(intent, pendingIntent)
+            } else {
+                // Тихая обработка в фоне без создания окон
+                tile.state = Tile.STATE_ACTIVE
+                tile.label = "Анализ..."
+                tile.updateTile()
+
+                val intent = Intent(this, com.example.videodownloader.activities.TileClipHandlerActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                val pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                launchActivity(intent, pendingIntent)
+
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    updateTileState()
+                }, 1500)
             }
-            val pendingIntent = PendingIntent.getActivity(
-                this, 0, intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            launchActivity(intent, pendingIntent)
-
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                updateTileState()
-            }, 1500)
         } catch (e: Exception) {
             updateTileState()
             Toast.makeText(applicationContext, "Ошибка вызова плитки: ${e.message}", Toast.LENGTH_SHORT).show()

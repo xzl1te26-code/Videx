@@ -45,6 +45,10 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     // Текущий активный экран
     var currentScreen by mutableStateOf(com.example.videodownloader.Screen.Home)
 
+    // Кэш для превью смарт-детектора (чтобы не переигрывать анимацию при возврате на экран)
+    var cachedClipboardUrl by mutableStateOf<String?>(null)
+    var cachedClipboardMetadata by mutableStateOf<com.example.videodownloader.VideoMetadata?>(null)
+
     // Флаг однократного воспроизведения анимации кадров за сессию
     var hasTipAnimationPlayedThisSession by mutableStateOf(false)
 

@@ -88,13 +88,13 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
     val recentClipboardUrls by SettingsManager.recentClipboardUrls.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    var clipboardUrl by remember { mutableStateOf<String?>(null) }
-    var clipboardMetadata by remember { mutableStateOf<VideoMetadata?>(null) }
     var showRecentHistorySheet by remember { mutableStateOf(false) }
 
-    LaunchedEffect(clipboardUrl, useClipboardPreview) {
-        val currentClip = clipboardUrl
+    LaunchedEffect(viewModel.cachedClipboardUrl, useClipboardPreview) {
+        val currentClip = viewModel.cachedClipboardUrl
         if (useClipboardPreview && !currentClip.isNullOrBlank()) {
+            if (viewModel.cachedClipboardMetadata != null) return@LaunchedEffect
+            
             withContext(kotlinx.coroutines.Dispatchers.IO) {
                 try {
                     val passportFile = CacheManager.getPassportFile(context, currentClip)
@@ -104,7 +104,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         val title = json.optString("title", "")
                         val thumb = json.optString("thumbnail", "")
                         if (title.isNotBlank()) {
-                            clipboardMetadata = VideoMetadata(title = title, thumbnailUrl = thumb)
+                            viewModel.cachedClipboardMetadata = VideoMetadata(title = title, thumbnailUrl = thumb)
                             return@withContext
                         }
                     }
@@ -112,13 +112,13 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                     // 🧠 Оптимизация: Для смарт-превью делаем легкий HTTP-запрос (без запуска тяжелого yt-dlp)
                     // Используем timeout 3 секунды. Если не вышло — просто ничего не показываем
                     val lightMeta = fetchLightMeta(currentClip)
-                    clipboardMetadata = lightMeta
+                    viewModel.cachedClipboardMetadata = lightMeta
                 } catch (_: Exception) {
-                    clipboardMetadata = null
+                    viewModel.cachedClipboardMetadata = null
                 }
             }
         } else {
-            clipboardMetadata = null
+            viewModel.cachedClipboardMetadata = null
         }
     }
 
@@ -126,7 +126,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
         try {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
             if (!clipboard.hasPrimaryClip()) {
-                clipboardUrl = null
+                viewModel.cachedClipboardUrl = null
                 return
             }
 
@@ -137,16 +137,17 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                 val extractedUrl = extractUrlFromText(clipText)
                 if (extractedUrl.isNotBlank() && isValidUrl(extractedUrl)) {
-                    if (extractedUrl != viewModel.dismissedClipboardUrl && extractedUrl != clipboardUrl) {
+                    if (extractedUrl != viewModel.dismissedClipboardUrl && extractedUrl != viewModel.cachedClipboardUrl) {
                         viewModel.dismissedClipboardUrl = null
+                        viewModel.cachedClipboardMetadata = null
                     }
-                    clipboardUrl = extractedUrl
+                    viewModel.cachedClipboardUrl = extractedUrl
                     SettingsManager.addRecentClipboardUrl(extractedUrl)
                 } else {
-                    clipboardUrl = null
+                    viewModel.cachedClipboardUrl = null
                 }
             } else {
-                clipboardUrl = null
+                viewModel.cachedClipboardUrl = null
             }
         } catch (e: Exception) {
             AsyncLogger.log(LogLevel.WARN, "Smart clipboard check suppressed: ${e.message}")
@@ -441,7 +442,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                             AnimatedContent(
                                 targetState = when {
                                     url.isNotEmpty() -> "clear"
-                                    clipboardUrl != null -> "paste_active"
+                                    viewModel.cachedClipboardUrl != null -> "paste_active"
                                     else -> "paste_inactive"
                                 },
                                 transitionSpec = {
@@ -457,7 +458,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     }
                                     "paste_active" -> {
                                         IconButton(onClick = {
-                                            clipboardUrl?.let {
+                                            viewModel.cachedClipboardUrl?.let {
                                                 AnalysisManager.setUrl(it)
                                                 coroutineScope.launch { snackbarHostState.showInstantSnackbar("Ссылка вставлена") }
                                                 focusManager.clearFocus()
@@ -495,14 +496,14 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
         // 💎 Смарт-детектор: Полностью переработанный премиальный дизайн (Dynamic Glass & Fluid Layout)
         item {
-            val showBubble = useClipboardBubble && clipboardUrl != null && clipboardUrl != url && clipboardUrl != viewModel.dismissedClipboardUrl
+            val showBubble = useClipboardBubble && viewModel.cachedClipboardUrl != null && viewModel.cachedClipboardUrl != url && viewModel.cachedClipboardUrl != viewModel.dismissedClipboardUrl
             
             AnimatedVisibility(
                 visible = showBubble,
                 enter = fadeIn(animationSpec = tween(400)) + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow)),
                 exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
             ) {
-                clipboardUrl?.let { clipUrl ->
+                viewModel.cachedClipboardUrl?.let { clipUrl ->
                     val clipPlatform = remember(clipUrl) { detectPlatformName(clipUrl) }
                     
                     Surface(
@@ -656,8 +657,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            val previewState = remember(useClipboardPreview, clipboardMetadata) {
-                                if (useClipboardPreview) clipboardMetadata else null
+                            val previewState = remember(useClipboardPreview, viewModel.cachedClipboardMetadata) {
+                                if (useClipboardPreview) viewModel.cachedClipboardMetadata else null
                             }
 
                             AnimatedContent(

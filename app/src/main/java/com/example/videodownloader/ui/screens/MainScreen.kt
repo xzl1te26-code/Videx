@@ -306,12 +306,11 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
             val tipConfigVersion by SettingsManager.tipConfigVersion.collectAsState()
 
             var phraseIndex by remember { mutableIntStateOf(0) }
-            var lastPlayedVersion by remember { mutableIntStateOf(-1) }
 
             LaunchedEffect(showDynamicTips, tipFrames, tipAnimationSpeedMs, tipPlaybackMode, tipConfigVersion) {
-                if (lastPlayedVersion != tipConfigVersion) {
+                if (viewModel.lastTipConfigVersion != tipConfigVersion) {
                     viewModel.hasTipAnimationPlayedThisSession = false
-                    lastPlayedVersion = tipConfigVersion
+                    viewModel.lastTipConfigVersion = tipConfigVersion
                 }
 
                 val shouldAnimate = showDynamicTips && tipFrames.isNotEmpty() && (
@@ -568,7 +567,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             fontWeight = FontWeight.ExtraBold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Surface(
@@ -581,9 +581,13 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Black,
                                                 color = MaterialTheme.colorScheme.onPrimary,
-                                                fontSize = 9.sp
+                                                fontSize = 9.sp,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
                                         }
+                                        
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                     
                                     Text(

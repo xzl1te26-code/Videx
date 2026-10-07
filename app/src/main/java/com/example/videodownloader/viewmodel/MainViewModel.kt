@@ -51,6 +51,7 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
 
     // Флаг однократного воспроизведения анимации кадров за сессию
     var hasTipAnimationPlayedThisSession by mutableStateOf(false)
+    var lastTipConfigVersion by mutableIntStateOf(-1)
 
     // 📋 Отклоненная ссылка из буфера обмена (персистентное состояние между вкладками)
     var dismissedClipboardUrl by mutableStateOf<String?>(null)

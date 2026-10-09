@@ -1364,7 +1364,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 Surface(
                                     onClick = {
                                         view.performAppHaptic(HapticType.CLICK)
-                                        viewModel.dismissedClipboardUrl = viewModel.cachedClipboardUrl
+                                        viewModel.cachedClipboardUrl = itemUrl
+                                        viewModel.dismissedClipboardUrl = null
                                         val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
                                         AnalysisManager.setUrl(itemUrl, autoAnalyze)
                                         focusManager.clearFocus()

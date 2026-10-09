@@ -1320,8 +1320,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                         view.performAppHaptic(HapticType.CLICK)
                                         viewModel.cachedClipboardUrl = itemUrl
                                         viewModel.dismissedClipboardUrl = null
-                                        val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
-                                        AnalysisManager.setUrl(itemUrl, autoAnalyze)
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = true)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

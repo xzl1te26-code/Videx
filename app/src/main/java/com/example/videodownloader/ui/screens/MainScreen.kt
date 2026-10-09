@@ -904,9 +904,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         AnimatedContent(
                             targetState = isAnalyzing, 
                             transitionSpec = {
-                                (fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f)) togetherWith 
-                                (fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.95f)) using 
-                                SizeTransform(clip = false, sizeAnimationSpec = { _, _ -> spring(dampingRatio = 0.9f, stiffness = 250f) })
+                                (fadeIn(animationSpec = tween(280)) + scaleIn(initialScale = 0.95f, animationSpec = tween(280))).togetherWith(
+                                    fadeOut(animationSpec = tween(220)) + scaleOut(targetScale = 0.95f, animationSpec = tween(220))
+                                )
                             },
                             label = "SkeletonTransition"
                         ) { analyzing ->
@@ -979,50 +979,87 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             }
                                         }
                                     }
+                                    
+                                    val isCurrentDownloadActive = remember(url, resultTitle, activeTasks) {
+                                        if (url.isBlank() && resultTitle.isBlank()) false
+                                        else DownloadManager.isAlreadyDownloading(url, resultTitle)
+                                    }
 
                                     Spacer(modifier = Modifier.height(6.dp))
 
-                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Button(
-                                            onClick = {
-                                                if (isPlaylist) {
-                                                    viewModel.showPlaylistSheet = true
-                                                } else {
-                                                    DownloadManager.startDownload(
-                                                        context = context,
-                                                        url = url,
-                                                        title = resultTitle,
-                                                        isAudio = false,
-                                                        quality = viewModel.selectedVideoQuality
+                                    AnimatedContent(
+                                        targetState = isCurrentDownloadActive,
+                                        transitionSpec = {
+                                            fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                                        },
+                                        label = "DownloadCardVsButtonsTransition"
+                                    ) { isDownloadingActive ->
+                                        if (isDownloadingActive) {
+                                            Surface(
+                                                shape = RoundedCornerShape(18.dp),
+                                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(16.dp),
+                                                    horizontalArrangement = Arrangement.Center,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp, color = MaterialTheme.colorScheme.primary)
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(
+                                                        text = "Файл загружается...",
+                                                        style = MaterialTheme.typography.labelLarge,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                                     )
                                                 }
-                                            },
-                                            modifier = Modifier.fillMaxWidth().height(52.dp),
-                                            shape = RoundedCornerShape(18.dp),
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                        ) {
-                                            Icon(if (isPlaylist) Icons.AutoMirrored.Filled.List else if (isPhotoPost) Icons.Default.PhotoLibrary else Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(20.dp))
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            val buttonText = when { isPlaylist -> "Открыть плейлист"; isPhotoPost -> "Скачать все фото"; resultTitle.isNotEmpty() -> "Скачать видео"; else -> "Скачать публикацию" }
-                                            Text(text = buttonText, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        }
-                                        AnimatedVisibility(visible = !isPlaylist && !isPhotoPost, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                                            FilledTonalButton(
-                                                onClick = {
-                                                    DownloadManager.startDownload(
-                                                        context = context,
-                                                        url = url,
-                                                        title = resultTitle,
-                                                        isAudio = true,
-                                                        quality = viewModel.selectedAudioQuality
-                                                    )
-                                                },
-                                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                                shape = RoundedCornerShape(18.dp)
-                                            ) {
-                                                Icon(Icons.Default.MusicNote, contentDescription = null, modifier = Modifier.size(18.dp))
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(text = "Извлечь Аудиодорожку", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                            }
+                                        } else {
+                                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                Button(
+                                                    onClick = {
+                                                        if (isPlaylist) {
+                                                            viewModel.showPlaylistSheet = true
+                                                        } else {
+                                                            DownloadManager.startDownload(
+                                                                context = context,
+                                                                url = url,
+                                                                title = resultTitle,
+                                                                isAudio = false,
+                                                                quality = viewModel.selectedVideoQuality
+                                                            )
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                    shape = RoundedCornerShape(18.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                                ) {
+                                                    Icon(if (isPlaylist) Icons.AutoMirrored.Filled.List else if (isPhotoPost) Icons.Default.PhotoLibrary else Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(20.dp))
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    val buttonText = when { isPlaylist -> "Открыть плейлист"; isPhotoPost -> "Скачать все фото"; resultTitle.isNotEmpty() -> "Скачать видео"; else -> "Скачать публикацию" }
+                                                    Text(text = buttonText, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                }
+                                                AnimatedVisibility(visible = !isPlaylist && !isPhotoPost, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                                                    FilledTonalButton(
+                                                        onClick = {
+                                                            DownloadManager.startDownload(
+                                                                context = context,
+                                                                url = url,
+                                                                title = resultTitle,
+                                                                isAudio = true,
+                                                                quality = viewModel.selectedAudioQuality
+                                                            )
+                                                        },
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                                        shape = RoundedCornerShape(18.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.MusicNote, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(text = "Извлечь Аудиодорожку", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1284,8 +1321,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     onClick = {
                                         view.performAppHaptic(HapticType.CLICK)
                                         viewModel.dismissedClipboardUrl = viewModel.cachedClipboardUrl
-                                        val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
-                                        AnalysisManager.setUrl(itemUrl, autoAnalyze)
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = true)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

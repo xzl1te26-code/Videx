@@ -93,7 +93,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
     LaunchedEffect(viewModel.cachedClipboardUrl, useClipboardPreview) {
         val currentClip = viewModel.cachedClipboardUrl
         if (useClipboardPreview && !currentClip.isNullOrBlank()) {
-            if (viewModel.cachedClipboardMetadata != null) return@LaunchedEffect
+            viewModel.cachedClipboardMetadata = null
             
             withContext(kotlinx.coroutines.Dispatchers.IO) {
                 try {
@@ -904,9 +904,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         AnimatedContent(
                             targetState = isAnalyzing, 
                             transitionSpec = {
-                                (fadeIn(animationSpec = tween(280)) + scaleIn(initialScale = 0.95f, animationSpec = tween(280))).togetherWith(
-                                    fadeOut(animationSpec = tween(220)) + scaleOut(targetScale = 0.95f, animationSpec = tween(220))
-                                )
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
                             },
                             label = "SkeletonTransition"
                         ) { analyzing ->
@@ -1320,8 +1318,10 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 Surface(
                                     onClick = {
                                         view.performAppHaptic(HapticType.CLICK)
-                                        viewModel.dismissedClipboardUrl = viewModel.cachedClipboardUrl
-                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = true)
+                                        viewModel.cachedClipboardUrl = itemUrl
+                                        viewModel.dismissedClipboardUrl = null
+                                        val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

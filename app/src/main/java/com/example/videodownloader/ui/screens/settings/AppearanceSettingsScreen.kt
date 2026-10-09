@@ -640,6 +640,18 @@ fun AppearanceSettingsScreen(
                                     stateFlow = SettingsManager.useClipboardHistory,
                                     onCheckedChange = { SettingsManager.setUseClipboardHistory(it) }
                                 )
+
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                SettingsSwitchRow(
+                                    title = "Авто-анализ ссылок",
+                                    subtitle = "Сразу начинать проверку при выборе ссылки из истории или вставке",
+                                    icon = Icons.Default.FlashAuto,
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    stateFlow = SettingsManager.autoAnalyzeLinks,
+                                    onCheckedChange = { SettingsManager.setAutoAnalyzeLinks(it) }
+                                )
                             }
                         }
                     }

@@ -413,7 +413,10 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     OutlinedTextField(
                         value = url,
-                        onValueChange = { AnalysisManager.setUrl(it) },
+                        onValueChange = { 
+                            val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
+                            AnalysisManager.setUrl(it, autoAnalyze) 
+                        },
                         placeholder = { Text("Вставьте ссылку...") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
@@ -458,7 +461,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     "paste_active" -> {
                                         IconButton(onClick = {
                                             viewModel.cachedClipboardUrl?.let {
-                                                AnalysisManager.setUrl(it)
+                                                viewModel.dismissedClipboardUrl = it
+                                                val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
+                                                AnalysisManager.setUrl(it, autoAnalyze)
                                                 coroutineScope.launch { snackbarHostState.showInstantSnackbar("Ссылка вставлена") }
                                                 focusManager.clearFocus()
                                             }
@@ -1256,7 +1261,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 Surface(
                                     onClick = {
                                         view.performAppHaptic(HapticType.CLICK)
-                                        AnalysisManager.setUrl(itemUrl)
+                                        viewModel.dismissedClipboardUrl = viewModel.cachedClipboardUrl
+                                        val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

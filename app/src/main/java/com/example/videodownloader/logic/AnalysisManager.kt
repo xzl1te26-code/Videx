@@ -58,7 +58,7 @@ object AnalysisManager {
         appContext = context.applicationContext
     }
 
-    fun setUrl(newUrl: String) {
+    fun setUrl(newUrl: String, autoAnalyze: Boolean = true) {
         val trimmed = newUrl.trim()
         _url.value = newUrl
 
@@ -66,7 +66,15 @@ object AnalysisManager {
             clear()
         } else if (isValidUrl(trimmed)) {
             _errorMessage.value = ""
-            startBackgroundAnalysis(trimmed)
+            if (autoAnalyze) {
+                startBackgroundAnalysis(trimmed)
+            } else {
+                analyzeJob?.cancel()
+                _isAnalyzing.value = false
+                _resultTitle.value = ""
+                _resultThumbnail.value = ""
+                _isPhotoPost.value = false
+            }
         } else {
             analyzeJob?.cancel()
             _isAnalyzing.value = false

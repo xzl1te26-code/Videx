@@ -43,6 +43,7 @@ object SettingsManager {
     private const val KEY_USE_CLIPBOARD_PREVIEW = "use_clipboard_preview"
     private const val KEY_USE_CLIPBOARD_HISTORY = "use_clipboard_history"
     private const val KEY_RECENT_CLIPBOARD_URLS = "recent_clipboard_urls_v1"
+    private const val KEY_AUTO_ANALYZE_LINKS = "auto_analyze_links"
     private const val KEY_SHOW_HISTORY_SORT = "show_history_sort"
     private const val KEY_HISTORY_SYNC_MODE = "history_sync_mode_v1"
     private const val KEY_HISTORY_TITLE_MODE = "history_title_mode_v1"
@@ -214,6 +215,9 @@ object SettingsManager {
     private val _useClipboardHistory = MutableStateFlow(true)
     val useClipboardHistory: StateFlow<Boolean> = _useClipboardHistory
 
+    private val _autoAnalyzeLinks = MutableStateFlow(true)
+    val autoAnalyzeLinks: StateFlow<Boolean> = _autoAnalyzeLinks
+
     private val _recentClipboardUrls = MutableStateFlow<List<String>>(emptyList())
     val recentClipboardUrls: StateFlow<List<String>> = _recentClipboardUrls
 
@@ -382,6 +386,7 @@ object SettingsManager {
         _useClipboardBubble.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_BUBBLE, true) ?: true
         _useClipboardPreview.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_PREVIEW, true) ?: true
         _useClipboardHistory.value = prefs?.getBoolean(KEY_USE_CLIPBOARD_HISTORY, true) ?: true
+        _autoAnalyzeLinks.value = prefs?.getBoolean(KEY_AUTO_ANALYZE_LINKS, true) ?: true
         val savedRecentUrls = prefs?.getString(KEY_RECENT_CLIPBOARD_URLS, null)
         if (!savedRecentUrls.isNullOrBlank()) {
             _recentClipboardUrls.value = savedRecentUrls.split(";;;").filter { it.isNotBlank() }.take(5)
@@ -792,6 +797,11 @@ object SettingsManager {
     fun setUseClipboardHistory(value: Boolean) {
         _useClipboardHistory.value = value
         prefs?.edit()?.putBoolean(KEY_USE_CLIPBOARD_HISTORY, value)?.apply()
+    }
+
+    fun setAutoAnalyzeLinks(value: Boolean) {
+        _autoAnalyzeLinks.value = value
+        prefs?.edit()?.putBoolean(KEY_AUTO_ANALYZE_LINKS, value)?.apply()
     }
 
     fun addRecentClipboardUrl(url: String) {

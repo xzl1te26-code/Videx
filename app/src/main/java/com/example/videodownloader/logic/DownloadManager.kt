@@ -80,11 +80,11 @@ object DownloadManager {
                                 url = taskUrl,
                                 progress = runningWork.progress.getInt(DownloadWorker.KEY_PROGRESS, 0),
                                 state = WorkInfo.State.RUNNING,
-                                startTime = runningWork.id.mostSignificantBits
+                                startTime = System.currentTimeMillis()
                             )
                         )
                     } else if (enqueuedCount > 0) {
-                        val firstEnqueued = workInfoList.find { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED }
+                        val firstEnqueued = workInfoList.find { (it.state == WorkInfo.State.ENQUEUED) || (it.state == WorkInfo.State.BLOCKED) }
 
                         allTasks.add(
                             DownloadTaskStatus(

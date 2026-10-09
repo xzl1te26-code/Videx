@@ -11,14 +11,14 @@ class App : PyApplication() {
         super.onCreate()
 
         // 1. Инициализация менеджеров
+        SettingsManager.init(this) // Синхронно, чтобы избежать мерцания темы на старте
         AsyncLogger.init(this)
         PerformanceManager.init(this)
         YtDlpBridge.init(this)
         AnalysisManager.init(this)
         
-        // Фоновая инициализация настроек
+        // Фоновые долгие задачи
         CoroutineScope(Dispatchers.IO).launch {
-            SettingsManager.init(this@App)
             YtDlpBridge.warmUp(this@App)
             CacheManager.cleanupPassports(this@App)
         }

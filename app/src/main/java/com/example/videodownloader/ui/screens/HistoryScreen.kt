@@ -152,7 +152,7 @@ fun CompactStorageWidget(fileList: List<DownloadedFileItem>) {
                     cornerRadius = cornerRadius
                 )
 
-                if (totalBytes > 0 && fillProgress > 0.001f) {
+                if ((totalBytes > 0) && (fillProgress > 0.001f)) {
                     val gapPx = 2.5.dp.toPx()
                     val activeTotalWidth = (totalWidth * fillProgress)
 
@@ -985,16 +985,6 @@ private fun HistoryItemCard(
         targetValue = if (isSelected) colorScheme.primaryContainer.copy(alpha = 0.45f) else colorScheme.surfaceColorAtElevation(1.dp),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "cardBgColor"
-    )
-    val cardBorderColor by animateColorAsState(
-        targetValue = if (isSelected) colorScheme.primary else if (item.isMissing) colorScheme.error.copy(alpha = 0.6f) else colorScheme.outlineVariant,
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
-        label = "cardBorderColor"
-    )
-    val cardBorderWidth by animateDpAsState(
-        targetValue = if (isSelected) 2.dp else 1.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "cardBorderWidth"
     )
     val cardScale by animateFloatAsState(
         targetValue = if (isSelected) 0.96f else 1f,

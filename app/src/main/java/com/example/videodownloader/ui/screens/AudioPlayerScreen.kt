@@ -406,7 +406,11 @@ fun AudioPlayerScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0E11)) // Сплошной непрозрачный базовый цвет для предотвращения просвечивания экрана под ним
+    ) {
         // 🌀 Размытый темный градиентный фон с кроссфейдом при смене трека
         Crossfade(targetState = currentItem, animationSpec = tween(350), label = "AudioBgBlurCrossfade") { activeItem ->
             AsyncImage(
@@ -414,8 +418,8 @@ fun AudioPlayerScreen(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(50.dp)
-                    .graphicsLayer(alpha = 0.45f),
+                    .blur(60.dp)
+                    .graphicsLayer(alpha = 0.5f),
                 contentScale = ContentScale.Crop
             )
         }
@@ -426,8 +430,9 @@ fun AudioPlayerScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.7f),
-                            Color.Black.copy(alpha = 0.92f)
+                            Color.Black.copy(alpha = 0.45f),
+                            Color.Black.copy(alpha = 0.8f),
+                            Color(0xFF0D0E11).copy(alpha = 0.96f)
                         )
                     )
                 )

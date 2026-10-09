@@ -134,7 +134,7 @@ tasks.register("downloadFFmpeg") {
         val armFile = file("${arm64Dir.path}/libffmpeg.so")
         if (!armFile.exists()) {
             println("Downloading FFmpeg for arm64...")
-            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-arm64.gz").openStream().use { input ->
+            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-linux-arm64.gz").openStream().use { input ->
                 GZIPInputStream(input).use { gzInput ->
                     FileOutputStream(armFile).use { output ->
                         gzInput.copyTo(output)
@@ -146,7 +146,7 @@ tasks.register("downloadFFmpeg") {
         val x86File = file("${x8664Dir.path}/libffmpeg.so")
         if (!x86File.exists()) {
             println("Downloading FFmpeg for x86_64...")
-            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-x64.gz").openStream().use { input ->
+            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-linux-x64.gz").openStream().use { input ->
                 GZIPInputStream(input).use { gzInput ->
                     FileOutputStream(x86File).use { output ->
                         gzInput.copyTo(output)

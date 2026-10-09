@@ -107,7 +107,16 @@ object AnalysisManager {
     private fun startBackgroundAnalysis(targetUrl: String) {
         if (analyzeJob?.isActive == true && _url.value == targetUrl) return // Не перезапускаем текущий анализ
         analyzeJob?.cancel()
-        
+
+        _isAnalyzing.value = true
+        _errorMessage.value = ""
+        _resultTitle.value = ""
+        _resultThumbnail.value = ""
+        _isPhotoPost.value = false
+        _availableQualities.value = emptyList()
+        _isPlaylist.value = false
+        _playlistEntries.value = emptyList()
+
         // 1. Проверка оперативной памяти
         val cached = analysisCache[targetUrl]
         if (cached != null && (System.currentTimeMillis() - cached.second < CACHE_EXPIRATION_MS)) {
@@ -135,15 +144,6 @@ object AnalysisManager {
                 }
             }
         }
-
-        _isAnalyzing.value = true
-        _errorMessage.value = ""
-        _resultTitle.value = ""
-        _resultThumbnail.value = ""
-        _isPhotoPost.value = false
-        _availableQualities.value = emptyList()
-        _isPlaylist.value = false
-        _playlistEntries.value = emptyList()
 
         // Проверка наличия активного подключения к интернету
         if (appContext != null && !com.example.videodownloader.utils.isNetworkAvailable(appContext)) {

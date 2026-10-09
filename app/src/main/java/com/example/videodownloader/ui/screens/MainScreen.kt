@@ -1063,18 +1063,64 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     }
                                 }
                             } else {
-                                // Состояние, когда анализ не выполнен (например, при выключенном авто-анализе)
+                                // Состояние, когда полный анализ еще не выполнен (при выключенном авто-анализе)
                                 Column(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Box(
-                                        modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.SavedSearch, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(28.dp))
+                                    val meta = viewModel.cachedClipboardMetadata
+                                    if (meta != null && meta.title.isNotBlank()) {
+                                        Surface(
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                if (meta.thumbnailUrl.isNotBlank()) {
+                                                    AsyncImage(
+                                                        model = ImageRequest.Builder(LocalContext.current)
+                                                            .data(meta.thumbnailUrl)
+                                                            .crossfade(true)
+                                                            .build(),
+                                                        contentDescription = null,
+                                                        contentScale = ContentScale.Crop,
+                                                        modifier = Modifier
+                                                            .size(48.dp)
+                                                            .clip(RoundedCornerShape(12.dp))
+                                                    )
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                }
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = platformName,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = meta.title,
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        maxLines = 2,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Box(
+                                            modifier = Modifier.size(52.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.SavedSearch, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(26.dp))
+                                        }
+                                        Spacer(modifier = Modifier.height(12.dp))
                                     }
-                                    Spacer(modifier = Modifier.height(16.dp))
                                     Text(
                                         text = "Ссылка готова к проверке",
                                         style = MaterialTheme.typography.titleMedium,
@@ -1083,13 +1129,13 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Нажмите кнопку ниже, чтобы загрузить информацию о медиафайле и выбрать качество.",
+                                        text = "Нажмите кнопку ниже, чтобы загрузить полную информацию о видео и выбор качества.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(horizontal = 24.dp)
+                                        modifier = Modifier.padding(horizontal = 16.dp)
                                     )
-                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
                                     Button(
                                         onClick = {
                                             view.performAppHaptic(HapticType.CLICK)
@@ -1320,7 +1366,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                         view.performAppHaptic(HapticType.CLICK)
                                         viewModel.cachedClipboardUrl = itemUrl
                                         viewModel.dismissedClipboardUrl = null
-                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = true)
+                                        val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = autoAnalyze)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

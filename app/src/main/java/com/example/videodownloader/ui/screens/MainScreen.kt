@@ -558,7 +558,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 // ЦЕНТР: Текстовый блок
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(
-                                        modifier = Modifier.height(26.dp), // Фиксируем высоту первой строки текста
+                                        modifier = Modifier.fillMaxWidth().height(26.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
@@ -567,8 +567,8 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             fontWeight = FontWeight.ExtraBold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.weight(1f, fill = false)
+                                            overflow = TextOverflow.Clip,
+                                            modifier = Modifier.weight(weight = 1f, fill = false)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Surface(

@@ -253,9 +253,9 @@ object YtDlpBridge {
                 var firstSavedFile: File? = null
 
                 fun cleanFileNameForHistory(rawName: String): String {
-                    var clean = rawName.replace(Regex("\\s*\\[[a-zA-Z0-9_-]{5,}]\$"), "").trim()
+                    var clean = rawName.replace(Regex("""\s*\[[a-zA-Z0-9_-]{5,}$"""), "").trim()
                     if (clean.startsWith("Анализ ")) {
-                        clean = clean.replace(Regex("^Анализ\\s+\\w+\\s*[-._]*"), "").trim()
+                        clean = clean.replace(Regex("""^Анализ\s+\w+\s*[-._]*"""), "").trim()
                     }
                     return clean.ifBlank { "Медиафайл" }
                 }

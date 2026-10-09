@@ -415,7 +415,10 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         value = url,
                         onValueChange = { 
                             val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
-                            AnalysisManager.setUrl(it, autoAnalyze) 
+                            AnalysisManager.setUrl(it, autoAnalyze)
+                            if (it.isEmpty()) {
+                                viewModel.dismissedClipboardUrl = null
+                            }
                         },
                         placeholder = { Text("Вставьте ссылку...") },
                         modifier = Modifier.fillMaxWidth(),
@@ -454,7 +457,11 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                             ) { state ->
                                 when (state) {
                                     "clear" -> {
-                                        IconButton(onClick = { AnalysisManager.clear(); focusManager.clearFocus() }) {
+                                        IconButton(onClick = { 
+                                            AnalysisManager.clear()
+                                            viewModel.dismissedClipboardUrl = null
+                                            focusManager.clearFocus() 
+                                        }) {
                                             Icon(Icons.Default.Clear, contentDescription = "Очистить")
                                         }
                                     }
@@ -872,7 +879,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
 
         item {
             AnimatedVisibility(
-                visible = errorMessage.isBlank() && (isCurrentUrlValid || isDownloading),
+                visible = errorMessage.isBlank() && (isCurrentUrlValid || isAnalyzing),
                 enter = expandVertically(
                     animationSpec = spring(dampingRatio = 0.9f, stiffness = 250f),
                     expandFrom = Alignment.Top
@@ -971,10 +978,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                         }
                                     }
                                     
-                                    val sortedTasks by remember { derivedStateOf { activeTasks.sortedBy { it.slot } } }
-                                    val isCurrentDownloadActive = remember(url, resultTitle, activeTasks, isDownloading) {
+                                    val isCurrentDownloadActive = remember(url, resultTitle, activeTasks) {
                                         if (url.isBlank() && resultTitle.isBlank()) false
-                                        else DownloadManager.isAlreadyDownloading(url, resultTitle) || (isDownloading && sortedTasks.isNotEmpty())
+                                        else DownloadManager.isAlreadyDownloading(url, resultTitle)
                                     }
 
                                     Spacer(modifier = Modifier.height(6.dp))
@@ -987,48 +993,25 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                         label = "DownloadCardVsButtonsTransition"
                                     ) { isDownloadingActive ->
                                         if (isDownloadingActive) {
-                                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                                if (sortedTasks.isNotEmpty()) {
-                                                    val heroTask = sortedTasks.first()
-                                                    HeroDownloadCard(
-                                                        task = heroTask,
-                                                        onCancel = { DownloadManager.cancelTask(context, heroTask.id) }
+                                            Surface(
+                                                shape = RoundedCornerShape(18.dp),
+                                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(16.dp),
+                                                    horizontalArrangement = Arrangement.Center,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp, color = MaterialTheme.colorScheme.primary)
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(
+                                                        text = "Файл загружается...",
+                                                        style = MaterialTheme.typography.labelLarge,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                                     )
-
-                                                    val secondaryTasks = sortedTasks.drop(1)
-                                                    if (secondaryTasks.isNotEmpty()) {
-                                                        secondaryTasks.forEach { task ->
-                                                            key(task.id) {
-                                                                CompactDownloadCard(
-                                                                    task = task,
-                                                                    onCancel = { DownloadManager.cancelTask(context, task.id) }
-                                                                )
-                                                            }
-                                                        }
-                                                    }
-
-                                                    val hiddenInQueue = queueCount - sortedTasks.size
-                                                    if (hiddenInQueue > 0) {
-                                                        Surface(
-                                                            shape = RoundedCornerShape(12.dp),
-                                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                                                        ) {
-                                                            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                                Icon(Icons.Default.Queue, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                                Spacer(modifier = Modifier.width(8.dp))
-                                                                Text(text = "В очереди еще: $hiddenInQueue", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
-                                                            }
-                                                        }
-                                                    }
-                                                } else {
-                                                    Box(modifier = Modifier.fillMaxWidth().height(90.dp), contentAlignment = Alignment.Center) {
-                                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
-                                                            Spacer(modifier = Modifier.width(12.dp))
-                                                            Text("Подготовка к скачиванию...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-                                                        }
-                                                    }
                                                 }
                                             }
                                         } else {
@@ -1056,7 +1039,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                     val buttonText = when { isPlaylist -> "Открыть плейлист"; isPhotoPost -> "Скачать все фото"; resultTitle.isNotEmpty() -> "Скачать видео"; else -> "Скачать публикацию" }
                                                     Text(text = buttonText, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 }
-                                                if (!isPlaylist && !isPhotoPost) {
+                                                AnimatedVisibility(visible = !isPlaylist && !isPhotoPost, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                                                     FilledTonalButton(
                                                         onClick = {
                                                             DownloadManager.startDownload(
@@ -1080,7 +1063,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                     }
                                 }
                             } else {
-                                // Состояние, когда анализ не выполнен (например, после закрытия ошибки)
+                                // Состояние, когда анализ не выполнен (например, при выключенном авто-анализе)
                                 Column(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
@@ -1126,6 +1109,80 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                 }
             }
         }
+        
+        // НОВЫЙ ОТДЕЛЬНЫЙ БЛОК: АКТИВНЫЕ ЗАГРУЗКИ (Очередь)
+        item {
+            val sortedTasks by remember { derivedStateOf { activeTasks.sortedBy { it.slot } } }
+            
+            AnimatedVisibility(
+                visible = isDownloading && sortedTasks.isNotEmpty(),
+                enter = expandVertically(
+                    animationSpec = spring(dampingRatio = 0.9f, stiffness = 250f),
+                    expandFrom = Alignment.Top
+                ) + fadeIn(tween(250)),
+                exit = shrinkVertically(
+                    animationSpec = tween(250),
+                    shrinkTowards = Alignment.Top
+                ) + fadeOut(tween(250))
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize(animationSpec = spring(dampingRatio = 0.9f, stiffness = 250f))
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Активные загрузки",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 2.dp, start = 4.dp)
+                        )
+
+                        val heroTask = sortedTasks.first()
+                        HeroDownloadCard(
+                            task = heroTask,
+                            onCancel = { DownloadManager.cancelTask(context, heroTask.id) }
+                        )
+
+                        val secondaryTasks = sortedTasks.drop(1)
+                        if (secondaryTasks.isNotEmpty()) {
+                            secondaryTasks.forEach { task ->
+                                key(task.id) {
+                                    CompactDownloadCard(
+                                        task = task,
+                                        onCancel = { DownloadManager.cancelTask(context, task.id) }
+                                    )
+                                }
+                            }
+                        }
+
+                        val hiddenInQueue = queueCount - sortedTasks.size
+                        if (hiddenInQueue > 0) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) {
+                                Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Queue, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "В очереди еще: $hiddenInQueue", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         item { Spacer(modifier = Modifier.height(20.dp)) }
     }
 

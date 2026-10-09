@@ -567,7 +567,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                             fontWeight = FontWeight.ExtraBold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Clip,
+                                            softWrap = false,
                                             modifier = Modifier.weight(weight = 1f, fill = false)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -586,8 +586,6 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                                 softWrap = false
                                             )
                                         }
-                                        
-                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                     
                                     Text(

@@ -34,3 +34,4 @@ local.properties
 
 # AI / IDE Artifacts
 .artifacts/
+app/src/main/jniLibs/

@@ -1,3 +1,7 @@
+import java.net.URL
+import java.io.FileOutputStream
+import java.util.zip.GZIPInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -114,4 +118,45 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register("downloadFFmpeg") {
+    val jniDir = file("src/main/jniLibs")
+    val arm64Dir = file("src/main/jniLibs/arm64-v8a")
+    val x8664Dir = file("src/main/jniLibs/x86_64")
+    
+    outputs.dir(jniDir)
+    
+    doLast {
+        arm64Dir.mkdirs()
+        x8664Dir.mkdirs()
+        
+        val armFile = file("${arm64Dir.path}/libffmpeg.so")
+        if (!armFile.exists()) {
+            println("Downloading FFmpeg for arm64...")
+            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-arm64.gz").openStream().use { input ->
+                GZIPInputStream(input).use { gzInput ->
+                    FileOutputStream(armFile).use { output ->
+                        gzInput.copyTo(output)
+                    }
+                }
+            }
+        }
+        
+        val x86File = file("${x8664Dir.path}/libffmpeg.so")
+        if (!x86File.exists()) {
+            println("Downloading FFmpeg for x86_64...")
+            URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-x64.gz").openStream().use { input ->
+                GZIPInputStream(input).use { gzInput ->
+                    FileOutputStream(x86File).use { output ->
+                        gzInput.copyTo(output)
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("downloadFFmpeg")
 }

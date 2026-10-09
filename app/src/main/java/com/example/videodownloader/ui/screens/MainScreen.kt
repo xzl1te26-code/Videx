@@ -910,7 +910,7 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                         ) { analyzing ->
                             if (analyzing) {
                                 MediaCardSkeleton(showThumbnails = showThumbnails)
-                            } else if (resultTitle.isNotBlank() || isDownloading) {
+                            } else if (resultTitle.isNotBlank()) {
                                 Column {
                                     if (showThumbnails && resultThumbnail.isNotBlank()) {
                                         Column {
@@ -1364,10 +1364,9 @@ fun MainScreen(snackbarHostState: SnackbarHostState, viewModel: MainViewModel) {
                                 Surface(
                                     onClick = {
                                         view.performAppHaptic(HapticType.CLICK)
-                                        viewModel.cachedClipboardUrl = itemUrl
-                                        viewModel.dismissedClipboardUrl = null
+                                        viewModel.dismissedClipboardUrl = viewModel.cachedClipboardUrl
                                         val autoAnalyze = SettingsManager.autoAnalyzeLinks.value
-                                        AnalysisManager.setUrl(itemUrl, autoAnalyze = autoAnalyze)
+                                        AnalysisManager.setUrl(itemUrl, autoAnalyze)
                                         focusManager.clearFocus()
                                         showRecentHistorySheet = false
                                     },

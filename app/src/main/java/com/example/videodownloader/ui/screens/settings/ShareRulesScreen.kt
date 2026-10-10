@@ -36,6 +36,13 @@ import com.example.videodownloader.ui.components.M3SegmentedControl
 import androidx.compose.ui.res.stringResource
 import com.example.videodownloader.R
 
+data class OptSheetItem(
+    val key: String,
+    val name: String,
+    val desc: String,
+    val icon: ImageVector
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ShareRulesScreen(onBack: () -> Unit) {
@@ -435,25 +442,33 @@ fun ShareRulesScreen(onBack: () -> Unit) {
             else -> ""
         }
 
+        val sheetHeaderIcon = when (activeOptSheet) {
+            "quality" -> Icons.Default.Hd
+            "codec" -> Icons.Default.MovieFilter
+            "photo" -> Icons.Default.PhotoSizeSelectLarge
+            "threshold" -> Icons.Default.FilterAlt
+            else -> Icons.Default.Tune
+        }
+
         val options = when (activeOptSheet) {
             "quality" -> listOf(
-                Triple("1080", "1080p Full HD", "Оптимальный баланс четкости и размера (~15–25 МБ)"),
-                Triple("720", "720p HD", "Ультра-быстрая отправка в Telegram (~10–12 МБ)"),
-                Triple("480", "480p SD", "Максимальная экономия трафика при слабом 3G")
+                OptSheetItem("1080", "1080p Full HD", "Оптимальный баланс четкости и размера (~15–25 МБ)", Icons.Default.HighQuality),
+                OptSheetItem("720", "720p HD", "Ультра-быстрая отправка в Telegram (~10–12 МБ)", Icons.Default.Speed),
+                OptSheetItem("480", "480p SD", "Максимальная экономия трафика при слабом 3G", Icons.Default.DataSaverOn)
             )
             "codec" -> listOf(
-                Triple("h264", "H.264 (AVC) • Совместимый", "Проигрывается прямо внутри чатов Telegram, WhatsApp и VK"),
-                Triple("h265", "H.265 (HEVC) • Ультра-сжатие", "Сжимает файл на 40% сильнее (может отправляться документом)")
+                OptSheetItem("h264", "H.264 (AVC) • Совместимый", "Проигрывается прямо внутри чатов Telegram, WhatsApp и VK", Icons.Default.PlayCircleOutline),
+                OptSheetItem("h265", "H.265 (HEVC) • Ультра-сжатие", "Сжимает файл на 40% сильнее (может отправляться документом)", Icons.Default.VideoSettings)
             )
             "photo" -> listOf(
-                Triple("88", "88% • Баланс сжатия", "Минус 70% веса файла без ощутимой потери деталей"),
-                Triple("75", "75% • Сильное сжатие", "Максимальная компактность для каруселей из 20+ снимков"),
-                Triple("100", "100% • Без сжатия", "Сохранять оригинальные несжатые изображения")
+                OptSheetItem("88", "88% • Баланс сжатия", "Минус 70% веса файла без ощутимой потери деталей", Icons.Default.AutoFixHigh),
+                OptSheetItem("75", "75% • Сильное сжатие", "Максимальная компактность для каруселей из 20+ снимков", Icons.Default.PhotoSizeSelectSmall),
+                OptSheetItem("100", "100% • Без сжатия", "Сохранять оригинальные несжатые изображения", Icons.Default.Image)
             )
             "threshold" -> listOf(
-                Triple("0", "Всегда", "Применять оптимизацию ко всем скачиваемым медиафайлам"),
-                Triple("25", "Больше 25 МБ", "Сжимать только если файл весит больше 25 МБ"),
-                Triple("50", "Больше 50 МБ", "Сжимать только тяжелые гигантские файлы")
+                OptSheetItem("0", "Всегда", "Применять оптимизацию ко всем скачиваемым медиафайлам", Icons.Default.FlashOn),
+                OptSheetItem("25", "Больше 25 МБ", "Сжимать только если файл весит больше 25 МБ", Icons.Default.Filter1),
+                OptSheetItem("50", "Больше 50 МБ", "Сжимать только тяжелые гигантские файлы", Icons.Default.Filter2)
             )
             else -> emptyList()
         }
@@ -478,14 +493,34 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                     .padding(horizontal = 20.dp)
                     .padding(bottom = 32.dp)
             ) {
-                Text(
-                    text = sheetTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 18.dp, start = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            sheetHeaderIcon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = sheetTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-                options.forEach { (key, name, desc) ->
+                options.forEach { opt ->
+                    val (key, name, desc, icon) = opt
                     val isSelected = currentSelectedKey == key
                     Surface(
                         onClick = {
@@ -499,7 +534,7 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                             activeOptSheet = null
                         },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
                         border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                     ) {
@@ -507,17 +542,41 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                             modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                             RadioButton(
                                 selected = isSelected,
                                 onClick = null,
                                 colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
                         }
                     }
                 }

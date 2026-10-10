@@ -28,8 +28,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
@@ -1619,6 +1621,33 @@ fun CompactDownloadCard(task: DownloadTaskStatus, onCancel: () -> Unit) {
         label = "CompactProgressFill"
     )
 
+    // 🌊 Анимация светового Shimmer-блика при активном скачивании (1% .. 99%)
+    val isActivelyDownloading = task.progress in 1..99
+    val transition = rememberInfiniteTransition(label = "ShimmerTransition")
+    val shimmerTranslateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1200f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "ShimmerOffset"
+    )
+
+    val progressBrush = if (isActivelyDownloading) {
+        Brush.linearGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            ),
+            start = Offset(shimmerTranslateAnim - 300f, shimmerTranslateAnim - 300f),
+            end = Offset(shimmerTranslateAnim, shimmerTranslateAnim)
+        )
+    } else {
+        SolidColor(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -1633,8 +1662,8 @@ fun CompactDownloadCard(task: DownloadTaskStatus, onCancel: () -> Unit) {
                         .fillMaxHeight()
                         .fillMaxWidth(animatedProgress)
                         .background(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                            RoundedCornerShape(12.dp)
+                            brush = progressBrush,
+                            shape = RoundedCornerShape(12.dp)
                         )
                 )
             }

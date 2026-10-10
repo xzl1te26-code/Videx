@@ -61,6 +61,7 @@ fun ShareRulesScreen(onBack: () -> Unit) {
 
     val view = LocalView.current
     var activePlatformId by remember { mutableStateOf<String?>(null) }
+    var activeOptSheet by remember { mutableStateOf<String?>(null) }
 
     if (activePlatformId != null) {
         val platformInfo = when (activePlatformId) {
@@ -356,121 +357,46 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                         enter = expandVertically() + fadeIn(),
                                         exit = shrinkVertically() + fadeOut()
                                     ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                                                .padding(bottom = 6.dp),
-                                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                                        ) {
+                                        Column {
                                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                                            // 1. Максимальное разрешение видео
-                                            Column {
-                                                Text(
-                                                    text = "Максимальное разрешение видео",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                                    SegmentedButton(
-                                                        selected = transitMaxQuality == "1080",
-                                                        onClick = { SettingsManager.setTransitMaxQuality("1080") },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                                                    ) { Text("1080p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitMaxQuality == "720",
-                                                        onClick = { SettingsManager.setTransitMaxQuality("720") },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                                                    ) { Text("720p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitMaxQuality == "480",
-                                                        onClick = { SettingsManager.setTransitMaxQuality("480") },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                                                    ) { Text("480p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
-                                                }
-                                            }
+                                            OptRowItem(
+                                                title = "Максимальное разрешение",
+                                                subtitle = "Ограничивать планку разрешения для легких файлов",
+                                                badgeText = when (transitMaxQuality) { "720" -> "720p HD"; "480" -> "480p SD"; else -> "1080p HD" },
+                                                icon = Icons.Default.Hd,
+                                                onClick = { activeOptSheet = "quality" }
+                                            )
 
-                                            // 2. Видеокодек
-                                            Column {
-                                                Text(
-                                                    text = "Предпочтительный видеокодек",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                                    SegmentedButton(
-                                                        selected = transitCodec == "h264",
-                                                        onClick = { SettingsManager.setTransitCodec("h264") },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                                                    ) { Text("H.264 (Совместимый)", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitCodec == "h265",
-                                                        onClick = { SettingsManager.setTransitCodec("h265") },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                                                    ) { Text("H.265 (HEVC)", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                }
-                                            }
+                                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
-                                            // 3. Качество фото
-                                            Column {
-                                                Text(
-                                                    text = "Сжатие фотографий",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                                    SegmentedButton(
-                                                        selected = transitPhotoQuality == 88,
-                                                        onClick = { SettingsManager.setTransitPhotoQuality(88) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                                                    ) { Text("88% Баланс", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitPhotoQuality == 75,
-                                                        onClick = { SettingsManager.setTransitPhotoQuality(75) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                                                    ) { Text("75% Сильное", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitPhotoQuality == 100,
-                                                        onClick = { SettingsManager.setTransitPhotoQuality(100) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                                                    ) { Text("Без сжатия", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                }
-                                            }
+                                            OptRowItem(
+                                                title = "Формат и кодек",
+                                                subtitle = "Совместимость с встроенным плеером мессенджеров",
+                                                badgeText = if (transitCodec == "h265") "H.265 (HEVC)" else "H.264 (MP4)",
+                                                icon = Icons.Default.MovieFilter,
+                                                onClick = { activeOptSheet = "codec" }
+                                            )
 
-                                            // 4. Порог размера
-                                            Column {
-                                                Text(
-                                                    text = "Порог срабатывания по размеру",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                                    SegmentedButton(
-                                                        selected = transitMinSizeThreshold == 0,
-                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(0) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                                                    ) { Text("Всегда", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitMinSizeThreshold == 25,
-                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(25) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                                                    ) { Text("> 25 МБ", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                    SegmentedButton(
-                                                        selected = transitMinSizeThreshold == 50,
-                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(50) },
-                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                                                    ) { Text("> 50 МБ", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-                                                }
-                                            }
+                                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                            OptRowItem(
+                                                title = "Сжатие изображений",
+                                                subtitle = "Уменьшать вес снимков и каруселей",
+                                                badgeText = when (transitPhotoQuality) { 75 -> "75% Сильное"; 100 -> "Без сжатия"; else -> "88% Баланс" },
+                                                icon = Icons.Default.PhotoSizeSelectLarge,
+                                                onClick = { activeOptSheet = "photo" }
+                                            )
+
+                                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                            OptRowItem(
+                                                title = "Порог активации",
+                                                subtitle = "Когда запускать сжатие медиафайлов",
+                                                badgeText = when (transitMinSizeThreshold) { 25 -> "> 25 МБ"; 50 -> "> 50 МБ"; else -> "Всегда" },
+                                                icon = Icons.Default.FilterAlt,
+                                                onClick = { activeOptSheet = "threshold" }
+                                            )
                                         }
                                     }
                                 }
@@ -497,6 +423,184 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                 }
             }
             item { Spacer(modifier = Modifier.height(20.dp)) }
+        }
+    }
+
+    if (activeOptSheet != null) {
+        val sheetTitle = when (activeOptSheet) {
+            "quality" -> "Максимальное разрешение"
+            "codec" -> "Формат и видеокодек"
+            "photo" -> "Сжатие фотографий"
+            "threshold" -> "Порог размера для активации"
+            else -> ""
+        }
+
+        val options = when (activeOptSheet) {
+            "quality" -> listOf(
+                Triple("1080", "1080p Full HD", "Оптимальный баланс четкости и размера (~15–25 МБ)"),
+                Triple("720", "720p HD", "Ультра-быстрая отправка в Telegram (~10–12 МБ)"),
+                Triple("480", "480p SD", "Максимальная экономия трафика при слабом 3G")
+            )
+            "codec" -> listOf(
+                Triple("h264", "H.264 (AVC) • Совместимый", "Проигрывается прямо внутри чатов Telegram, WhatsApp и VK"),
+                Triple("h265", "H.265 (HEVC) • Ультра-сжатие", "Сжимает файл на 40% сильнее (может отправляться документом)")
+            )
+            "photo" -> listOf(
+                Triple("88", "88% • Баланс сжатия", "Минус 70% веса файла без ощутимой потери деталей"),
+                Triple("75", "75% • Сильное сжатие", "Максимальная компактность для каруселей из 20+ снимков"),
+                Triple("100", "100% • Без сжатия", "Сохранять оригинальные несжатые изображения")
+            )
+            "threshold" -> listOf(
+                Triple("0", "Всегда", "Применять оптимизацию ко всем скачиваемым медиафайлам"),
+                Triple("25", "Больше 25 МБ", "Сжимать только если файл весит больше 25 МБ"),
+                Triple("50", "Больше 50 МБ", "Сжимать только тяжелые гигантские файлы")
+            )
+            else -> emptyList()
+        }
+
+        val currentSelectedKey = when (activeOptSheet) {
+            "quality" -> transitMaxQuality
+            "codec" -> transitCodec
+            "photo" -> transitPhotoQuality.toString()
+            "threshold" -> transitMinSizeThreshold.toString()
+            else -> ""
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = { activeOptSheet = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    text = sheetTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
+                )
+
+                options.forEach { (key, name, desc) ->
+                    val isSelected = currentSelectedKey == key
+                    Surface(
+                        onClick = {
+                            view.performAppHaptic(HapticType.CLICK)
+                            when (activeOptSheet) {
+                                "quality" -> SettingsManager.setTransitMaxQuality(key)
+                                "codec" -> SettingsManager.setTransitCodec(key)
+                                "photo" -> SettingsManager.setTransitPhotoQuality(key.toInt())
+                                "threshold" -> SettingsManager.setTransitMinSizeThreshold(key.toInt())
+                            }
+                            activeOptSheet = null
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent,
+                        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OptRowItem(
+    title: String,
+    subtitle: String,
+    badgeText: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 15.sp
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontSize = 11.sp,
+                        softWrap = false
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

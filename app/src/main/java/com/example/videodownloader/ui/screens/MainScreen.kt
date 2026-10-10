@@ -1704,14 +1704,30 @@ fun CompactDownloadCard(task: DownloadTaskStatus, onCancel: () -> Unit) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(
-                    text = if (task.progress == 0) "В очереди" else "${task.progress}%",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 12.sp,
-                    softWrap = false
-                )
+                AnimatedContent(
+                    targetState = task.progress,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInVertically { height -> height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> -height } + fadeOut()
+                            )
+                        } else {
+                            (slideInVertically { height -> -height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> height } + fadeOut()
+                            )
+                        }.using(SizeTransform(clip = false))
+                    },
+                    label = "CompactProgressOdometer"
+                ) { currentProgress ->
+                    Text(
+                        text = if (currentProgress == 0) "В очереди" else "$currentProgress%",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 12.sp,
+                        softWrap = false
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(8.dp))
 

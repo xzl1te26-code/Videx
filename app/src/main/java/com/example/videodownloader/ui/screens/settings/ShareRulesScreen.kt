@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.videodownloader.PlatformDownloadRule
@@ -350,8 +351,8 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                             ) {
                                 Column {
                                     SettingsSwitchRow(
-                                        title = "Оптимизация для отправки",
-                                        subtitle = "Подбирать легкий формат и сжимать фото для молниеносной загрузки в Telegram",
+                                        title = "Быстрая отправка",
+                                        subtitle = "Оптимизация файлов для Telegram",
                                         icon = Icons.Default.Speed,
                                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -368,8 +369,8 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                             OptRowItem(
-                                                title = "Максимальное разрешение",
-                                                subtitle = "Ограничивать планку разрешения для легких файлов",
+                                                title = "Разрешение",
+                                                subtitle = "Лимит качества видео",
                                                 badgeText = when (transitMaxQuality) { "720" -> "720p HD"; "480" -> "480p SD"; else -> "1080p HD" },
                                                 icon = Icons.Default.Hd,
                                                 onClick = { activeOptSheet = "quality" }
@@ -378,8 +379,8 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                             OptRowItem(
-                                                title = "Формат и кодек",
-                                                subtitle = "Совместимость с встроенным плеером мессенджеров",
+                                                title = "Видеокодек",
+                                                subtitle = "Совместимость с чатами",
                                                 badgeText = if (transitCodec == "h265") "H.265 (HEVC)" else "H.264 (MP4)",
                                                 icon = Icons.Default.MovieFilter,
                                                 onClick = { activeOptSheet = "codec" }
@@ -388,8 +389,8 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                             OptRowItem(
-                                                title = "Сжатие изображений",
-                                                subtitle = "Уменьшать вес снимков и каруселей",
+                                                title = "Сжатие фото",
+                                                subtitle = "Уменьшение веса снимков",
                                                 badgeText = when (transitPhotoQuality) { 75 -> "75% Сильное"; 100 -> "Без сжатия"; else -> "88% Баланс" },
                                                 icon = Icons.Default.PhotoSizeSelectLarge,
                                                 onClick = { activeOptSheet = "photo" }
@@ -398,8 +399,8 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                                             OptRowItem(
-                                                title = "Порог активации",
-                                                subtitle = "Когда запускать сжатие медиафайлов",
+                                                title = "Порог размера",
+                                                subtitle = "Когда запускать сжатие",
                                                 badgeText = when (transitMinSizeThreshold) { 25 -> "> 25 МБ"; 50 -> "> 50 МБ"; else -> "Всегда" },
                                                 icon = Icons.Default.FilterAlt,
                                                 onClick = { activeOptSheet = "threshold" }
@@ -600,13 +601,13 @@ fun OptRowItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -614,33 +615,37 @@ fun OptRowItem(
                     icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 15.sp
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.sp
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = MaterialTheme.colorScheme.primaryContainer,
                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -651,7 +656,7 @@ fun OptRowItem(
                         fontSize = 11.sp,
                         softWrap = false
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
                     Icon(
                         Icons.Default.ArrowDropDown,
                         contentDescription = null,

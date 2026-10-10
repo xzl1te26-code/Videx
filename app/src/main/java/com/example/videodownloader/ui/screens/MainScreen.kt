@@ -1612,62 +1612,94 @@ fun HeroDownloadCard(task: DownloadTaskStatus, onCancel: () -> Unit) {
 
 @Composable
 fun CompactDownloadCard(task: DownloadTaskStatus, onCancel: () -> Unit) {
+    val progressFraction = remember(task.progress) { (task.progress / 100f).coerceIn(0f, 1f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = progressFraction,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "CompactProgressFill"
+    )
+
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(42.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Тонкое неоновое кольцо статуса потока
-            Box(
-                modifier = Modifier.size(26.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    progress = { task.progress / 100f },
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.5.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (animatedProgress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(animatedProgress)
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                            RoundedCornerShape(12.dp)
+                        )
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    modifier = Modifier.size(26.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "#${task.slot}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
                 Text(
-                    text = task.title, 
-                    style = MaterialTheme.typography.bodyMedium, 
-                    fontWeight = FontWeight.Bold, 
-                    maxLines = 1, 
+                    text = task.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.height(1.dp))
-                val progressText = if (task.progress == 0) "Ожидание" else "${task.progress}%"
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "Поток ${task.slot} • $progressText", 
-                    style = MaterialTheme.typography.labelSmall, 
+                    text = if (task.progress == 0) "В очереди" else "${task.progress}%",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 12.sp,
+                    softWrap = false
                 )
-            }
-            
-            Surface(
-                onClick = onCancel,
-                modifier = Modifier.size(24.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.05f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Close, 
-                        contentDescription = "Отмена", 
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), 
-                        modifier = Modifier.size(10.dp)
-                    )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Surface(
+                    onClick = onCancel,
+                    modifier = Modifier.size(24.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Отмена",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
                 }
             }
         }

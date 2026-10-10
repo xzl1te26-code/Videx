@@ -55,8 +55,8 @@ jobs:
         with:
           files: app/build/outputs/apk/release/app-release.apk
           name: Videx Release ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

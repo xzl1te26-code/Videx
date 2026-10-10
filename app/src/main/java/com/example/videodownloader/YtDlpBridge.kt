@@ -315,7 +315,7 @@ object YtDlpBridge {
                             }
                         }
                         srcFile.delete()
-                        if (firstSavedFile == null) firstSavedFile = File(srcFile.name)
+                        if (firstSavedFile == null) firstSavedFile = File(newDoc.uri.toString())
 
                         val cleanHistoryName = cleanFileNameForHistory(srcFile.nameWithoutExtension)
 
@@ -337,7 +337,7 @@ object YtDlpBridge {
                             saveToGallery = saveToGallery
                         )
 
-                        if (firstSavedFile == null) firstSavedFile = File(srcFile.name)
+                        if (firstSavedFile == null) firstSavedFile = File(savedUriOrPath)
                         srcFile.delete()
 
                         val cleanHistoryName = cleanFileNameForHistory(srcFile.nameWithoutExtension)

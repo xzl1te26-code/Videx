@@ -1,6 +1,7 @@
 import java.net.URL
 import java.io.FileOutputStream
 import java.util.zip.GZIPInputStream
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.application)
@@ -132,7 +133,18 @@ tasks.register("downloadFFmpeg") {
         arm64Dir.mkdirs()
         x8664Dir.mkdirs()
         
+        fun verifySha256(targetFile: File, expectedHash: String) {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val bytes = targetFile.readBytes()
+            val actualHash = digest.digest(bytes).joinToString("") { b -> String.format("%02X", b) }
+            if (!actualHash.equals(expectedHash, ignoreCase = true)) {
+                targetFile.delete()
+                throw GradleException("SHA-256 verification failed for ${targetFile.name}! Expected: $expectedHash, Actual: $actualHash")
+            }
+        }
+
         val armFile = file("${arm64Dir.path}/libffmpeg.so")
+        val expectedArmHash = "6BB182D0D75D23028DB82E9E4F723CA69B853D055698486E6984DDB2C06FB8CE"
         if (!armFile.exists()) {
             println("Downloading FFmpeg for arm64...")
             URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-linux-arm64.gz").openStream().use { input ->
@@ -142,9 +154,11 @@ tasks.register("downloadFFmpeg") {
                     }
                 }
             }
+            verifySha256(armFile, expectedArmHash)
         }
         
         val x86File = file("${x8664Dir.path}/libffmpeg.so")
+        val expectedX86Hash = "E7E7FB30477F717E6F55F9180A70386C62677EF8A4D4D1A5D948F4098AA3EB99"
         if (!x86File.exists()) {
             println("Downloading FFmpeg for x86_64...")
             URL("https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-linux-x64.gz").openStream().use { input ->
@@ -154,6 +168,7 @@ tasks.register("downloadFFmpeg") {
                     }
                 }
             }
+            verifySha256(x86File, expectedX86Hash)
         }
     }
 }

@@ -611,12 +611,16 @@ def download_video(url, output_dir, callback=None, is_audio_only=False, quality=
         if is_audio_only:
             format_str = 'bestaudio[ext=m4a]/bestaudio/best'
             format_sort_rules = ['abr', 'ext:m4a:mp3']
-        elif quality == "transit_optimized":
+        elif quality.startswith("transit_opt"):
+            parts = quality.split(":")
+            res = parts[1] if len(parts) > 1 else "1080"
+            codec = parts[2] if len(parts) > 2 else "h264"
+            vcodec_clause = "[vcodec^=avc1]" if codec == "h264" else ("[vcodec^=hev1]" if codec == "h265" else "")
             if has_ffmpeg:
-                format_str = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]/best'
+                format_str = f'bestvideo[height<={res}]{vcodec_clause}+bestaudio/bestvideo[height<={res}]+bestaudio/best[height<={res}][ext=mp4]/best[height<={res}]/best'
             else:
-                format_str = 'best[height<=1080][ext=mp4]/best[height<=1080]/best'
-            format_sort_rules = ['res:1080', 'ext:mp4:m4a']
+                format_str = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
+            format_sort_rules = [f'res:{res}', 'ext:mp4:m4a']
         else:
             if quality in ["2160", "1440", "1080", "720", "480", "360", "240", "144"]:
                 h = quality

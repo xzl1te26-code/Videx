@@ -262,14 +262,19 @@ object YtDlpBridge {
 
                 fun compressPhotoIfNeeded(file: File) {
                     try {
-                        if (!file.exists() || file.length() <= 1_500_000L) return
+                        val targetQuality = SettingsManager.transitPhotoQuality.value
+                        if (targetQuality >= 100) return
+                        val thresholdMb = SettingsManager.transitMinSizeThreshold.value
+                        val thresholdBytes = if (thresholdMb == 0) 1_500_000L else thresholdMb * 1024L * 1024L
+                        if (!file.exists() || file.length() <= thresholdBytes) return
+
                         val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath) ?: return
                         val fos = java.io.FileOutputStream(file)
-                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, fos)
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, targetQuality, fos)
                         fos.flush()
                         fos.close()
                         bitmap.recycle()
-                        AsyncLogger.log(LogLevel.INFO, "Транзит: Фото сжато до ${file.length() / 1024} КБ")
+                        AsyncLogger.log(LogLevel.INFO, "Транзит: Фото сжато до ${file.length() / 1024} КБ ($targetQuality% качества)")
                     } catch (e: Exception) {
                         AsyncLogger.log(LogLevel.WARN, "Ошибка сжатия фото: ${e.message}")
                     }

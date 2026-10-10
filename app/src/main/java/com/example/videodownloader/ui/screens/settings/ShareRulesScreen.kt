@@ -53,6 +53,12 @@ fun ShareRulesScreen(onBack: () -> Unit) {
     val transitMinSize by SettingsManager.transitModeMinSizeMb.collectAsState()
     val transitPlatforms by SettingsManager.transitModePlatforms.collectAsState()
 
+    val transitOptimizeSize by SettingsManager.transitOptimizeSize.collectAsState()
+    val transitMaxQuality by SettingsManager.transitMaxQuality.collectAsState()
+    val transitCodec by SettingsManager.transitCodec.collectAsState()
+    val transitMinSizeThreshold by SettingsManager.transitMinSizeThreshold.collectAsState()
+    val transitPhotoQuality by SettingsManager.transitPhotoQuality.collectAsState()
+
     val view = LocalView.current
     var activePlatformId by remember { mutableStateOf<String?>(null) }
 
@@ -334,15 +340,140 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)),
                                 border = com.example.videodownloader.ui.theme.getAppCardBorder()
                             ) {
-                                SettingsSwitchRow(
-                                    title = "Оптимизация для отправки",
-                                    subtitle = "Подбирать легкий формат (1080p MP4) и сжимать фото для молниеносной загрузки в Telegram",
-                                    icon = Icons.Default.Speed,
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    stateFlow = SettingsManager.transitOptimizeSize,
-                                    onCheckedChange = { SettingsManager.setTransitOptimizeSize(it) }
-                                )
+                                Column {
+                                    SettingsSwitchRow(
+                                        title = "Оптимизация для отправки",
+                                        subtitle = "Подбирать легкий формат и сжимать фото для молниеносной загрузки в Telegram",
+                                        icon = Icons.Default.Speed,
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        stateFlow = SettingsManager.transitOptimizeSize,
+                                        onCheckedChange = { SettingsManager.setTransitOptimizeSize(it) }
+                                    )
+
+                                    AnimatedVisibility(
+                                        visible = transitOptimizeSize,
+                                        enter = expandVertically() + fadeIn(),
+                                        exit = shrinkVertically() + fadeOut()
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                                .padding(bottom = 6.dp),
+                                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                            // 1. Максимальное разрешение видео
+                                            Column {
+                                                Text(
+                                                    text = "Максимальное разрешение видео",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                                    SegmentedButton(
+                                                        selected = transitMaxQuality == "1080",
+                                                        onClick = { SettingsManager.setTransitMaxQuality("1080") },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                                                    ) { Text("1080p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitMaxQuality == "720",
+                                                        onClick = { SettingsManager.setTransitMaxQuality("720") },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                                                    ) { Text("720p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitMaxQuality == "480",
+                                                        onClick = { SettingsManager.setTransitMaxQuality("480") },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                                                    ) { Text("480p", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                                                }
+                                            }
+
+                                            // 2. Видеокодек
+                                            Column {
+                                                Text(
+                                                    text = "Предпочтительный видеокодек",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                                    SegmentedButton(
+                                                        selected = transitCodec == "h264",
+                                                        onClick = { SettingsManager.setTransitCodec("h264") },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                                                    ) { Text("H.264 (Совместимый)", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitCodec == "h265",
+                                                        onClick = { SettingsManager.setTransitCodec("h265") },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                                                    ) { Text("H.265 (HEVC)", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                }
+                                            }
+
+                                            // 3. Качество фото
+                                            Column {
+                                                Text(
+                                                    text = "Сжатие фотографий",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                                    SegmentedButton(
+                                                        selected = transitPhotoQuality == 88,
+                                                        onClick = { SettingsManager.setTransitPhotoQuality(88) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                                                    ) { Text("88% Баланс", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitPhotoQuality == 75,
+                                                        onClick = { SettingsManager.setTransitPhotoQuality(75) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                                                    ) { Text("75% Сильное", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitPhotoQuality == 100,
+                                                        onClick = { SettingsManager.setTransitPhotoQuality(100) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                                                    ) { Text("Без сжатия", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                }
+                                            }
+
+                                            // 4. Порог размера
+                                            Column {
+                                                Text(
+                                                    text = "Порог срабатывания по размеру",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                                    SegmentedButton(
+                                                        selected = transitMinSizeThreshold == 0,
+                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(0) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                                                    ) { Text("Всегда", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitMinSizeThreshold == 25,
+                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(25) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                                                    ) { Text("> 25 МБ", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                    SegmentedButton(
+                                                        selected = transitMinSizeThreshold == 50,
+                                                        onClick = { SettingsManager.setTransitMinSizeThreshold(50) },
+                                                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                                                    ) { Text("> 50 МБ", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             Text(stringResource(R.string.platform_rules_header), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp, modifier = Modifier.padding(start = 6.dp))

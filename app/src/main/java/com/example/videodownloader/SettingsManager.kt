@@ -75,6 +75,10 @@ object SettingsManager {
     private const val KEY_TRANSIT_MODE_MIN_SIZE_MB = "transit_mode_min_size_mb"
     private const val KEY_TRANSIT_MODE_PLATFORMS = "transit_mode_platforms"
     private const val KEY_TRANSIT_OPTIMIZE_SIZE = "transit_optimize_size"
+    private const val KEY_TRANSIT_MAX_QUALITY = "transit_max_quality"
+    private const val KEY_TRANSIT_CODEC = "transit_codec"
+    private const val KEY_TRANSIT_MIN_SIZE_THRESHOLD = "transit_min_size_threshold"
+    private const val KEY_TRANSIT_PHOTO_QUALITY = "transit_photo_quality"
     private const val KEY_AUTO_CLEANUP_LOGS = "auto_cleanup_logs"
 
     // Повторы (Wi-Fi и Mobile)
@@ -188,6 +192,18 @@ object SettingsManager {
 
     private val _transitOptimizeSize = MutableStateFlow(true)
     val transitOptimizeSize: StateFlow<Boolean> = _transitOptimizeSize
+
+    private val _transitMaxQuality = MutableStateFlow("1080")
+    val transitMaxQuality: StateFlow<String> = _transitMaxQuality
+
+    private val _transitCodec = MutableStateFlow("h264")
+    val transitCodec: StateFlow<String> = _transitCodec
+
+    private val _transitMinSizeThreshold = MutableStateFlow(0)
+    val transitMinSizeThreshold: StateFlow<Int> = _transitMinSizeThreshold
+
+    private val _transitPhotoQuality = MutableStateFlow(88)
+    val transitPhotoQuality: StateFlow<Int> = _transitPhotoQuality
 
     private val _notifAutoDismiss = MutableStateFlow(0L)
     val notifAutoDismiss: StateFlow<Long> = _notifAutoDismiss
@@ -372,6 +388,10 @@ object SettingsManager {
         _transitModeMinSizeMb.value = prefs?.getInt(KEY_TRANSIT_MODE_MIN_SIZE_MB, 0) ?: 0
         _transitModePlatforms.value = prefs?.getStringSet(KEY_TRANSIT_MODE_PLATFORMS, setOf("TikTok", "Instagram", "YouTube")) ?: setOf("TikTok", "Instagram", "YouTube")
         _transitOptimizeSize.value = prefs?.getBoolean(KEY_TRANSIT_OPTIMIZE_SIZE, true) ?: true
+        _transitMaxQuality.value = prefs?.getString(KEY_TRANSIT_MAX_QUALITY, "1080") ?: "1080"
+        _transitCodec.value = prefs?.getString(KEY_TRANSIT_CODEC, "h264") ?: "h264"
+        _transitMinSizeThreshold.value = prefs?.getInt(KEY_TRANSIT_MIN_SIZE_THRESHOLD, 0) ?: 0
+        _transitPhotoQuality.value = prefs?.getInt(KEY_TRANSIT_PHOTO_QUALITY, 88) ?: 88
         
         _notifAutoDismiss.value = prefs?.getLong(KEY_NOTIF_AUTO_DISMISS, 0L) ?: 0L
         _notifDetailedProgress.value = prefs?.getBoolean(KEY_NOTIF_DETAILED_PROGRESS, true) ?: true
@@ -527,6 +547,26 @@ object SettingsManager {
     fun setTransitOptimizeSize(value: Boolean) {
         _transitOptimizeSize.value = value
         prefs?.edit()?.putBoolean(KEY_TRANSIT_OPTIMIZE_SIZE, value)?.apply()
+    }
+
+    fun setTransitMaxQuality(value: String) {
+        _transitMaxQuality.value = value
+        prefs?.edit()?.putString(KEY_TRANSIT_MAX_QUALITY, value)?.apply()
+    }
+
+    fun setTransitCodec(value: String) {
+        _transitCodec.value = value
+        prefs?.edit()?.putString(KEY_TRANSIT_CODEC, value)?.apply()
+    }
+
+    fun setTransitMinSizeThreshold(value: Int) {
+        _transitMinSizeThreshold.value = value
+        prefs?.edit()?.putInt(KEY_TRANSIT_MIN_SIZE_THRESHOLD, value)?.apply()
+    }
+
+    fun setTransitPhotoQuality(value: Int) {
+        _transitPhotoQuality.value = value
+        prefs?.edit()?.putInt(KEY_TRANSIT_PHOTO_QUALITY, value)?.apply()
     }
 
     fun setNotifSoundQueueEnd(value: Boolean) {

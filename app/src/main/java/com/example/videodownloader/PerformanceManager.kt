@@ -73,8 +73,8 @@ object PerformanceManager {
         }
 
         val frameTimeThresholdNs = (1000_000_000L / refreshRate).toLong()
-        // Считаем джанком, если кадр занял более 2-х интервалов VSync
-        val jankThresholdNs = frameTimeThresholdNs * 2 
+        // Считаем джанком, если кадр занял более 2-х интервалов VSync (но не менее 16мс для экранов 144Hz+)
+        val jankThresholdNs = maxOf(frameTimeThresholdNs * 2, 16_000_000L) 
 
         val listener = object : Window.OnFrameMetricsAvailableListener {
             override fun onFrameMetricsAvailable(

@@ -2,6 +2,7 @@ package com.example.videodownloader
 
 import android.content.Context
 import android.content.Intent
+import android.content.ContentResolver
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -364,7 +365,13 @@ object HistoryManager {
                     connection.readTimeout = 5000
                     connection.doInput = true
                     connection.connect()
-                    if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    
+                    val contentType = connection.contentType ?: ""
+                    val contentLength = connection.contentLengthLong
+                    if (connection.responseCode == HttpURLConnection.HTTP_OK && 
+                        (contentType.isBlank() || contentType.contains("image", ignoreCase = true)) &&
+                        (contentLength <= 0 || contentLength <= 10_000_000L)
+                    ) {
                         connection.inputStream.use { input ->
                             FileOutputStream(localThumbFile).use { output ->
                                 input.copyTo(output)
@@ -618,17 +625,26 @@ object HistoryManager {
         
         for (baseUri in collections) {
             try {
-                // Поиск по DATA, DISPLAY_NAME и SIZE
+                // Поиск по DATA, DISPLAY_NAME и SIZE с лимитом 1 записи для быстродействия
                 val fileName = File(path).name
                 val fileSize = File(path).length()
                 
-                val cursor = resolver.query(
-                    baseUri,
-                    arrayOf(MediaStore.MediaColumns._ID),
-                    "${MediaStore.MediaColumns.DATA} = ? OR (${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.SIZE} = ?)",
-                    arrayOf(path, fileName, fileSize.toString()),
-                    null
-                )
+                val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val queryArgs = android.os.Bundle().apply {
+                        putString(ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.MediaColumns.DATA} = ? OR (${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.SIZE} = ?)")
+                        putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(path, fileName, fileSize.toString()))
+                        putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+                    }
+                    resolver.query(baseUri, arrayOf(MediaStore.MediaColumns._ID), queryArgs, null)
+                } else {
+                    resolver.query(
+                        baseUri,
+                        arrayOf(MediaStore.MediaColumns._ID),
+                        "${MediaStore.MediaColumns.DATA} = ? OR (${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.SIZE} = ?)",
+                        arrayOf(path, fileName, fileSize.toString()),
+                        "${MediaStore.MediaColumns._ID} ASC LIMIT 1"
+                    )
+                }
                 cursor?.use {
                     if (it.moveToFirst()) {
                         val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))

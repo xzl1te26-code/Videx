@@ -194,7 +194,7 @@ class DownloadWorker(
             "VideoDownloader:DownloadWakeLock"
         )?.apply {
             setReferenceCounted(false)
-            acquire(60 * 60 * 1000L)
+            acquire(30 * 60 * 1000L) // 30 минут максимум согласно Android Best Practices
         }
 
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
@@ -624,7 +624,8 @@ class DownloadWorker(
                 }
             }
             getAvailableDiskSpace() 
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AsyncLogger.log(LogLevel.WARN, "DownloadWorker: Ошибка запроса места SAF: ${e.message}, сброс на встроенное хранилище")
             getAvailableDiskSpace()
         }
     }

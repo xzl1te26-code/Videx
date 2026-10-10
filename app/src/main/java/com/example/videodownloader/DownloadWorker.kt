@@ -236,7 +236,8 @@ class DownloadWorker(
                 val optimizeTransit = SettingsManager.transitOptimizeSize.value
                 val maxRes = SettingsManager.transitMaxQuality.value
                 val codec = SettingsManager.transitCodec.value
-                val effectiveQuality = if (optimizeTransit && (quality == "best" || quality.isBlank())) "transit_opt:$maxRes:$codec" else quality
+                val minThreshold = SettingsManager.transitMinSizeThreshold.value
+                val effectiveQuality = if (optimizeTransit && (quality == "best" || quality.isBlank())) "transit_opt:$maxRes:$codec:$minThreshold" else quality
 
                 downloadResult = YtDlpBridge.downloadVideo(
                     context = context,

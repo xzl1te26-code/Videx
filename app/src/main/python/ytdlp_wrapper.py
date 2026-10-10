@@ -615,12 +615,23 @@ def download_video(url, output_dir, callback=None, is_audio_only=False, quality=
             parts = quality.split(":")
             res = parts[1] if len(parts) > 1 else "1080"
             codec = parts[2] if len(parts) > 2 else "h264"
-            vcodec_clause = "[vcodec^=avc1]" if codec == "h264" else ("[vcodec^=hev1]" if codec == "h265" else "")
-            if has_ffmpeg:
-                format_str = f'bestvideo[height<={res}]{vcodec_clause}+bestaudio/bestvideo[height<={res}]+bestaudio/best[height<={res}][ext=mp4]/best[height<={res}]/best'
+            threshold_mb = int(parts[3]) if (len(parts) > 3 and parts[3].isdigit()) else 0
+
+            # 🧠 Проверка порога: если предполагаемый размер файла меньше порога пользователя — качаем оригинал!
+            est_size = (passport_data.get("filesize") or passport_data.get("filesize_approx") or 0) if passport_data else 0
+            if threshold_mb > 0 and 0 < est_size < (threshold_mb * 1024 * 1024):
+                if has_ffmpeg:
+                    format_str = 'bestvideo+bestaudio/best'
+                else:
+                    format_str = 'best/bestvideo+bestaudio'
+                format_sort_rules = ['res', 'ext:mp4:m4a']
             else:
-                format_str = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
-            format_sort_rules = [f'res:{res}', 'ext:mp4:m4a']
+                vcodec_clause = "[vcodec^=avc1]" if codec == "h264" else ("[vcodec^=hev1]" if codec == "h265" else "")
+                if has_ffmpeg:
+                    format_str = f'bestvideo[height<={res}]{vcodec_clause}+bestaudio/bestvideo[height<={res}]+bestaudio/best[height<={res}][ext=mp4]/best[height<={res}]/best'
+                else:
+                    format_str = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
+                format_sort_rules = [f'res:{res}', 'ext:mp4:m4a']
         else:
             if quality in ["2160", "1440", "1080", "720", "480", "360", "240", "144"]:
                 h = quality

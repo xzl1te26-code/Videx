@@ -182,9 +182,9 @@ object HistoryManager {
         if (bytes <= 0) return "0 КБ"
         val mb = bytes / (1024.0 * 1024.0)
         return when {
-            mb >= 1024 -> String.format(Locale.getDefault(), "%.2f ГБ", mb / 1024.0)
-            mb >= 0.1 -> String.format(Locale.getDefault(), "%.1f МБ", mb)
-            else -> String.format(Locale.getDefault(), "%.0f КБ", bytes / 1024.0)
+            mb >= 1024 -> String.format(Locale.US, "%.2f ГБ", mb / 1024.0)
+            mb >= 0.1 -> String.format(Locale.US, "%.1f МБ", mb)
+            else -> String.format(Locale.US, "%.0f КБ", bytes / 1024.0)
         }
     }
 

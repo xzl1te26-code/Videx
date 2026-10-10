@@ -11,9 +11,9 @@ class HistoryManagerTest {
     @Test
     fun testFormatBytes() {
         assertEquals("0 КБ", HistoryManager.formatBytes(0L))
-        assertEquals("0,5 МБ", HistoryManager.formatBytes(500L * 1024L))
-        assertEquals("15,5 МБ", HistoryManager.formatBytes((15.5 * 1024 * 1024).toLong()))
-        assertEquals("1,50 ГБ", HistoryManager.formatBytes((1.5 * 1024 * 1024 * 1024).toLong()))
+        assertEquals("0.5 МБ", HistoryManager.formatBytes(500L * 1024L))
+        assertEquals("15.5 МБ", HistoryManager.formatBytes((15.5 * 1024 * 1024).toLong()))
+        assertEquals("1.50 ГБ", HistoryManager.formatBytes((1.5 * 1024 * 1024 * 1024).toLong()))
     }
 
     @Test

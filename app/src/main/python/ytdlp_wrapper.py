@@ -611,6 +611,12 @@ def download_video(url, output_dir, callback=None, is_audio_only=False, quality=
         if is_audio_only:
             format_str = 'bestaudio[ext=m4a]/bestaudio/best'
             format_sort_rules = ['abr', 'ext:m4a:mp3']
+        elif quality == "transit_optimized":
+            if has_ffmpeg:
+                format_str = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]/best'
+            else:
+                format_str = 'best[height<=1080][ext=mp4]/best[height<=1080]/best'
+            format_sort_rules = ['res:1080', 'ext:mp4:m4a']
         else:
             if quality in ["2160", "1440", "1080", "720", "480", "360", "240", "144"]:
                 h = quality

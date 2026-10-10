@@ -260,8 +260,34 @@ object YtDlpBridge {
                     return clean.ifBlank { "Медиафайл" }
                 }
 
+                fun compressPhotoIfNeeded(file: File) {
+                    try {
+                        if (!file.exists() || file.length() <= 1_500_000L) return
+                        val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath) ?: return
+                        val fos = java.io.FileOutputStream(file)
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, fos)
+                        fos.flush()
+                        fos.close()
+                        bitmap.recycle()
+                        AsyncLogger.log(LogLevel.INFO, "Транзит: Фото сжато до ${file.length() / 1024} КБ")
+                    } catch (e: Exception) {
+                        AsyncLogger.log(LogLevel.WARN, "Ошибка сжатия фото: ${e.message}")
+                    }
+                }
+
                 for (srcFile in downloadedFiles) {
                     if (!srcFile.exists()) continue
+
+                    val mediaType = when {
+                        isPhoto -> MediaType.PHOTO
+                        isAudioOnly -> MediaType.AUDIO
+                        else -> MediaType.VIDEO
+                    }
+
+                    if (mediaType == MediaType.PHOTO && SettingsManager.transitOptimizeSize.value) {
+                        compressPhotoIfNeeded(srcFile)
+                    }
+
                     val fileSize = srcFile.length()
 
                     // Умное определение MIME-типа на основе расширения после Remux
@@ -271,12 +297,6 @@ object YtDlpBridge {
                         isAudioOnly -> "audio/mp4"
                         ext == "mkv" -> "video/x-matroska"
                         else -> "video/mp4"
-                    }
-
-                    val mediaType = when {
-                        isPhoto -> MediaType.PHOTO
-                        isAudioOnly -> MediaType.AUDIO
-                        else -> MediaType.VIDEO
                     }
 
                     if (customUri != null) {

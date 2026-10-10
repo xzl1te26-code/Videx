@@ -269,6 +269,18 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                                     )
                                                 }
 
+                                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                                                SettingsSwitchRow(
+                                                    title = "Оптимизировать для отправки",
+                                                    subtitle = "Подбирать легкий формат (1080p MP4) и сжимать фото для молниеносной загрузки в Telegram",
+                                                    icon = Icons.Default.Speed,
+                                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    stateFlow = SettingsManager.transitOptimizeSize,
+                                                    onCheckedChange = { SettingsManager.setTransitOptimizeSize(it) }
+                                                )
+
                                                 Column(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
                                                         text = stringResource(R.string.active_services_header),

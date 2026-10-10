@@ -117,12 +117,9 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
         }
     }
 
-    private var checkDuplicateJob: kotlinx.coroutines.Job? = null
-
     @OptIn(FlowPreview::class)
     fun checkDuplicate(context: Context, checkDuplicates: Boolean) {
-        checkDuplicateJob?.cancel()
-        checkDuplicateJob = viewModelScope.launch {
+        viewModelScope.launch {
             // Объединяем потоки URL и Заголовка, чтобы проверять дубликат только когда данные стабильны
             combine(AnalysisManager.url, AnalysisManager.resultTitle) { url, title ->
                 url to title

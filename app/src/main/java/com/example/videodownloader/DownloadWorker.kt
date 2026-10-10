@@ -94,6 +94,7 @@ class DownloadWorker(
         val throttledRate = if (isWifi) SettingsManager.throttledRateWifi.value else SettingsManager.throttledRateMobile.value
 
         val isBatch = inputData.getBoolean(KEY_IS_BATCH, false)
+        val isAutopilot = inputData.getBoolean(KEY_IS_AUTOPILOT, false)
         val maxRetries = if (isBatch) {
             if (isWifi) SettingsManager.queueRetryWifi.value else SettingsManager.queueRetryMobile.value
         } else {
@@ -232,11 +233,14 @@ class DownloadWorker(
                     delay(3000.milliseconds)
                 }
 
+                val optimizeTransit = SettingsManager.transitOptimizeSize.value
+                val effectiveQuality = if (isAutopilot && optimizeTransit && (quality == "best" || quality.isBlank())) "transit_optimized" else quality
+
                 downloadResult = YtDlpBridge.downloadVideo(
                     context = context,
                     url = url,
                     isAudioOnly = isAudio,
-                    quality = quality,
+                    quality = effectiveQuality,
                     threads = threads,
                     rateLimit = rateLimit,
                     throttledRate = throttledRate,

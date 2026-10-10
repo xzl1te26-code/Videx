@@ -401,7 +401,7 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                             OptRowItem(
                                                 title = "Порог размера",
                                                 subtitle = "Когда запускать сжатие",
-                                                badgeText = when (transitMinSizeThreshold) { 25 -> "> 25 МБ"; 50 -> "> 50 МБ"; else -> "Всегда" },
+                                                badgeText = when (transitMinSizeThreshold) { 10 -> "> 10 МБ"; 25 -> "> 25 МБ"; 50 -> "> 50 МБ"; 100 -> "> 100 МБ"; 200 -> "> 200 МБ"; else -> "Всегда" },
                                                 icon = Icons.Default.FilterAlt,
                                                 onClick = { activeOptSheet = "threshold" }
                                             )
@@ -468,8 +468,11 @@ fun ShareRulesScreen(onBack: () -> Unit) {
             )
             "threshold" -> listOf(
                 OptSheetItem("0", "Всегда", "Применять оптимизацию ко всем скачиваемым медиафайлам", Icons.Default.FlashOn),
-                OptSheetItem("25", "Больше 25 МБ", "Сжимать только если файл весит больше 25 МБ", Icons.Default.Filter1),
-                OptSheetItem("50", "Больше 50 МБ", "Сжимать только тяжелые гигантские файлы", Icons.Default.Filter2)
+                OptSheetItem("10", "Больше 10 МБ", "Сжимать только если файл весит больше 10 МБ", Icons.Default.Filter1),
+                OptSheetItem("25", "Больше 25 МБ", "Сжимать только если файл весит больше 25 МБ", Icons.Default.Filter2),
+                OptSheetItem("50", "Больше 50 МБ", "Сжимать файлы весом больше 50 МБ (лимит обычного Telegram)", Icons.Default.Filter3),
+                OptSheetItem("100", "Больше 100 МБ", "Сжимать только если файл весит больше 100 МБ", Icons.Default.Filter4),
+                OptSheetItem("200", "Больше 200 МБ", "Сжимать только гигантские файлы весом больше 200 МБ", Icons.Default.Filter5)
             )
             else -> emptyList()
         }

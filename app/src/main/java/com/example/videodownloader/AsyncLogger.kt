@@ -22,7 +22,8 @@ data class LogEntry(
     val timestamp: String = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date()),
     val dateStr: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
     val level: LogLevel,
-    val message: String
+    val message: String,
+    var count: Int = 1
 )
 
 object AsyncLogger {
@@ -92,10 +93,22 @@ object AsyncLogger {
     }
 
     fun log(level: LogLevel, message: String) {
-        val entry = LogEntry(level = level, message = message)
-        _logs.update { (it + entry).takeLast(1000) }
+        _logs.update { list ->
+            if (list.isNotEmpty()) {
+                val last = list.last()
+                if (last.level == level && last.message == message) {
+                    val updatedLast = last.copy(
+                        count = last.count + 1,
+                        timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                    )
+                    return@update list.dropLast(1) + updatedLast
+                }
+            }
+            val entry = LogEntry(level = level, message = message)
+            (list + entry).takeLast(1000)
+        }
         
-        // Отправляем в канал для фоновой записи
+        val entry = LogEntry(level = level, message = message)
         logChannel.trySend(entry)
     }
 

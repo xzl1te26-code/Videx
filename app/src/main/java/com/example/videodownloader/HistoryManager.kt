@@ -188,7 +188,7 @@ object HistoryManager {
         }
     }
 
-    private fun extractVideoId(url: String): String? {
+    fun extractVideoId(url: String): String? {
         val cleanUrl = url.trim()
         try {
             // 1. YouTube (including Shorts, Embed, Attribution links)

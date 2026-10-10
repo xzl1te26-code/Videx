@@ -38,4 +38,15 @@ class HistoryManagerTest {
         assertFalse(HistoryManager.isTrashedOrTempPath("/storage/emulated/0/Videx/my_cool_video.mp4"))
         assertFalse(HistoryManager.isTrashedOrTempPath("content://media/external/images/media/789"))
     }
+
+    @Test
+    fun testExtractVideoId() {
+        assertEquals("yt_dQw4w9WgXcQ", HistoryManager.extractVideoId("https://youtube.com/watch?v=dQw4w9WgXcQ"))
+        assertEquals("yt_dQw4w9WgXcQ", HistoryManager.extractVideoId("https://youtu.be/dQw4w9WgXcQ"))
+        assertEquals("yt_dQw4w9WgXcQ", HistoryManager.extractVideoId("https://youtube.com/shorts/dQw4w9WgXcQ"))
+
+        assertEquals("tt_1234567890123456789", HistoryManager.extractVideoId("https://tiktok.com/@user/video/1234567890123456789"))
+        assertEquals("ig_C12345678", HistoryManager.extractVideoId("https://instagram.com/reel/C12345678/"))
+        assertEquals("vk_123456_7890", HistoryManager.extractVideoId("https://vk.com/video-123456_7890"))
+    }
 }

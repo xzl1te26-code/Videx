@@ -22,8 +22,26 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Run Unit Tests
+        run: ./gradlew test --stacktrace
+
       - name: Build Release APK
         run: ./gradlew :app:assembleRelease --stacktrace
+
+      - name: Verify Release APK Integrity
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "Error: Release APK was not generated!"
+            exit 1
+          fi
+          
+          SIZE=$(stat -c%s "$APK_PATH" || stat -f%z "$APK_PATH")
+          echo "Release APK Size: $SIZE bytes"
+          if [ "$SIZE" -lt 10000000 ]; then
+            echo "Error: Release APK size is suspiciously small ($SIZE bytes)!"
+            exit 1
+          fi
 
       - name: Create GitHub Release and Upload APK
         uses: softprops/action-gh-release@v1

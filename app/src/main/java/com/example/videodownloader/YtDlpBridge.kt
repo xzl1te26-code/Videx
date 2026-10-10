@@ -114,15 +114,23 @@ object YtDlpBridge {
     suspend fun fetchInfo(url: String): Result<VideoMetadata> = withContext(Dispatchers.IO) {
         try {
             val py = Python.getInstance()
-            val module = py.getModule("ytdlp_wrapper")
-            ensureCustomCore(appContext, module)
+            val timedResult = withTimeoutOrNull(25000L) {
+                val module = py.getModule("ytdlp_wrapper")
+                ensureCustomCore(appContext, module)
 
-            val cookiePath = appContext?.let { AuthManager.exportCookies(it)?.absolutePath } ?: ""
-            val useImpersonate = SettingsManager.useImpersonate.value
+                val cookiePath = appContext?.let { AuthManager.exportCookies(it)?.absolutePath } ?: ""
+                val useImpersonate = SettingsManager.useImpersonate.value
 
-            AsyncLogger.log(LogLevel.INFO, "Парсинг ссылки: $url")
-            val passportPath = appContext?.let { CacheManager.getPassportFile(it, url).absolutePath } ?: ""
-            val result = module.callAttr("get_video_info", url, cookiePath, useImpersonate, passportPath).asMap()
+                AsyncLogger.log(LogLevel.INFO, "Парсинг ссылки: $url")
+                val passportPath = appContext?.let { CacheManager.getPassportFile(it, url).absolutePath } ?: ""
+                module.callAttr("get_video_info", url, cookiePath, useImpersonate, passportPath).asMap()
+            }
+
+            if (timedResult == null) {
+                AsyncLogger.log(LogLevel.ERROR, "Превышено время ожидания ответа от сервера (25 сек)")
+                return@withContext Result.failure(Exception("Превышено время ожидания ответа от сервера (25 сек)"))
+            }
+            val result = timedResult
 
             if (result[py.builtins.callAttr("str", "status")]?.toString() == "success") {
                 val title = result[py.builtins.callAttr("str", "title")]?.toString() ?: "Без названия"

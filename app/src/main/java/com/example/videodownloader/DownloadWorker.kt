@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 import java.io.File
 import java.text.SimpleDateFormat
@@ -239,61 +240,60 @@ class DownloadWorker(
                 val minThreshold = SettingsManager.transitMinSizeThreshold.value
                 val effectiveQuality = if (optimizeTransit && (quality == "best" || quality.isBlank())) "transit_opt:$maxRes:$codec:$minThreshold" else quality
 
-                downloadResult = YtDlpBridge.downloadVideo(
-                    context = context,
-                    url = url,
-                    isAudioOnly = isAudio,
-                    quality = effectiveQuality,
-                    threads = threads,
-                    rateLimit = rateLimit,
-                    throttledRate = throttledRate,
-                    customFilename = customFilename,
-                    thumbnailUrl = downloadThumbnail,
-                    passportPath = passportPath,
-                    isCancelled = { isStopped }
-                ) { progress, speed, eta ->
-                    if (isStopped) return@downloadVideo
+                downloadResult = withTimeoutOrNull(3600000L) {
+                    YtDlpBridge.downloadVideo(
+                        context = context,
+                        url = url,
+                        isAudioOnly = isAudio,
+                        quality = effectiveQuality,
+                        threads = threads,
+                        rateLimit = rateLimit,
+                        throttledRate = throttledRate,
+                        customFilename = customFilename,
+                        thumbnailUrl = downloadThumbnail,
+                        passportPath = passportPath,
+                        isCancelled = { isStopped }
+                    ) { progress, speed, eta ->
+                        if (isStopped) return@downloadVideo
 
-                    val currentTime = System.currentTimeMillis()
-                    
-                    // Обновляем среднюю скорость сети для алгоритма "умного транзита"
-                    // Разделяем замеры для Wi-Fi и мобильной сети (только при существенном изменении прогресса)
-                    if (speed > 0 && progress % 5 == 0) {
-                        val isWifi = com.example.videodownloader.utils.isWifiConnected(context)
-                        SettingsManager.updateAvgSpeed(speed, isWifi)
-                    }
-
-                    // Ограничение нагрузки при нагреве устройства
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val status = PerformanceManager.thermalStatus.value
-                        if (status >= PowerManager.THERMAL_STATUS_SEVERE) {
-                            // Искусственная задержка для снижения нагрузки на CPU
-                            runBlocking { delay(200) }
+                        val currentTime = System.currentTimeMillis()
+                        
+                        if (speed > 0 && progress % 5 == 0) {
+                            val isWifi = com.example.videodownloader.utils.isWifiConnected(context)
+                            SettingsManager.updateAvgSpeed(speed, isWifi)
                         }
-                    }
 
-                    // Обновление уведомления не чаще чем раз в 1.2 секунды
-                    if (currentTime - lastUpdateTime >= 1200 || progress == 100) {
-                        if (progress != lastProgress || currentTime - lastUpdateTime >= 2000) {
-                            lastProgress = progress
-                            lastUpdateTime = currentTime
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            val status = PerformanceManager.thermalStatus.value
+                            if (status >= PowerManager.THERMAL_STATUS_SEVERE) {
+                                runBlocking { delay(200) }
+                            }
+                        }
 
-                            setProgressAsync(
-                                workDataOf(
-                                    KEY_PROGRESS to progress,
-                                    KEY_TITLE to downloadTitle,
-                                    KEY_URL to url
+                        if (currentTime - lastUpdateTime >= 1200 || progress == 100) {
+                            if (progress != lastProgress || currentTime - lastUpdateTime >= 2000) {
+                                lastProgress = progress
+                                lastUpdateTime = currentTime
+
+                                setProgressAsync(
+                                    workDataOf(
+                                        KEY_PROGRESS to progress,
+                                        KEY_TITLE to downloadTitle,
+                                        KEY_URL to url
+                                    )
                                 )
-                            )
-                            notificationManager.notify(
-                                currentNotifId, 
-                                buildProgressNotification(downloadTitle, progress, speed, eta)
-                            )
+                                notificationManager.notify(
+                                    currentNotifId, 
+                                    buildProgressNotification(downloadTitle, progress, speed, eta)
+                                )
+                            }
                         }
                     }
                 }
 
-                if (downloadResult.isSuccess) {
+                if (downloadResult == null) {
+                    AsyncLogger.log(LogLevel.WARN, "DownloadWorker: Превышен таймаут скачивания (1 час)")
+                } else if (downloadResult.isSuccess) {
                     break
                 }
                 attempt++

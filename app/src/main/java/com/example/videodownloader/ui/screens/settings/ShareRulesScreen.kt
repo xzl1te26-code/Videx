@@ -269,18 +269,6 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                                     )
                                                 }
 
-                                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-
-                                                SettingsSwitchRow(
-                                                    title = "Оптимизировать для отправки",
-                                                    subtitle = "Подбирать легкий формат (1080p MP4) и сжимать фото для молниеносной загрузки в Telegram",
-                                                    icon = Icons.Default.Speed,
-                                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                    stateFlow = SettingsManager.transitOptimizeSize,
-                                                    onCheckedChange = { SettingsManager.setTransitOptimizeSize(it) }
-                                                )
-
                                                 Column(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
                                                         text = stringResource(R.string.active_services_header),
@@ -338,6 +326,23 @@ fun ShareRulesScreen(onBack: () -> Unit) {
                                         }
                                     }
                                 }
+                            }
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)),
+                                border = com.example.videodownloader.ui.theme.getAppCardBorder()
+                            ) {
+                                SettingsSwitchRow(
+                                    title = "Оптимизация для отправки",
+                                    subtitle = "Подбирать легкий формат (1080p MP4) и сжимать фото для молниеносной загрузки в Telegram",
+                                    icon = Icons.Default.Speed,
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    stateFlow = SettingsManager.transitOptimizeSize,
+                                    onCheckedChange = { SettingsManager.setTransitOptimizeSize(it) }
+                                )
                             }
 
                             Text(stringResource(R.string.platform_rules_header), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp, modifier = Modifier.padding(start = 6.dp))
